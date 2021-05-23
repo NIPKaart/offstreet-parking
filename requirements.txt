@@ -1,0 +1,11 @@
+aiohttp==3.7.4.post0
+async-timeout==3.0.1
+attrs==21.2.0
+chardet==4.0.0
+garages-amsterdam==2.1.0
+idna==3.1
+multidict==5.1.0
+PyMySQL==1.0.2
+python-dotenv==0.17.1
+typing-extensions==3.10.0.0
+yarl==1.6.3
