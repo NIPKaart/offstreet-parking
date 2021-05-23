@@ -1,0 +1,20 @@
+# Docker compose STACK file
+version: "3"
+services:
+  # Scrape Amsterdam Service
+  scrape_garages_amsterdam:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "NIPKaart_garages_amsterdam"
+    image: garages-amsterdam:latest
+    environment:
+      - TZ=Europe/Amsterdam
+    networks:
+      - backend
+    restart: on-failure
+
+# Networks
+networks:
+  backend:
+    driver: overlay
