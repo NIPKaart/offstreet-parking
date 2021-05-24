@@ -6,10 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: "NIPKaart_garages_amsterdam"
+    container_name: "NIPKaart_garages_${CITY}"
     image: garages-amsterdam:latest
-    environment:
-      - TZ=Europe/Amsterdam
     networks:
       - backend
     restart: on-failure
