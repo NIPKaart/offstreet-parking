@@ -3,7 +3,7 @@
 *** github_username, repo_name
 -->
 
-# ⚙️ NIPKaart - Scraper tool
+# ⚙️ NIPKaart Garages - Scraper tool
 <!-- PROJECT SHIELDS -->
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE.md)
