@@ -3,12 +3,7 @@ version: "3"
 services:
   # Scrape Amsterdam Service
   nipkaart_amsterdam:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: garages-amsterdam:latest
-    environment:
-      - TZ=Europe/Amsterdam
     networks:
       - backend
     deploy:

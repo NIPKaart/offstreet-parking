@@ -14,7 +14,10 @@ DATABASE    = os.getenv("DATABASE")
 DB_USERNAME = os.getenv("DB_USERNAME")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
-SLEEP_TIME = 60 * 10    # gelijk aan 10 minuten
+CITY        = os.getenv("CITY")
+WAIT_TIME   = int(os.getenv("WAIT_TIME"))
+
+SLEEP_TIME = (60 * WAIT_TIME) # gelijk aan 10 minuten
 
 # Connect to MySQL
 connection = pymysql.connect(host=DB_SERVER, port=DB_PORT, user=DB_USERNAME, password=DB_PASSWORD, database=DATABASE)
@@ -38,8 +41,8 @@ def update_database(data_set):
     count=1
     try:
         for item in data_set:
-            sql = """INSERT INTO `garages_amsterdam` (id, name, state, free_space_short, free_space_long, short_capacity, long_capacity, longitude, latitude, created_at, updated_at) 
-                     VALUES (%s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY 
+            sql = """INSERT INTO `garages_amsterdam` (id, name, city, state, free_space_short, free_space_long, short_capacity, long_capacity, longitude, latitude, visibility, created_at, updated_at) 
+                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY 
                      UPDATE id=values(id),
                             name=values(name),
                             state=values(state),
@@ -50,7 +53,7 @@ def update_database(data_set):
                             longitude=values(longitude),
                             latitude=values(latitude),
                             updated_at=values(updated_at)"""
-            val = (count, str(item.garage_name), str(item.state), check_value(item.free_space_short), check_value(item.free_space_long), check_value(item.short_capacity), check_value(item.long_capacity), float(item.longitude), float(item.latitude), (datetime.datetime.now()), (datetime.datetime.now()))
+            val = (count, str(item.garage_name), str(CITY) ,str(item.state), check_value(item.free_space_short), check_value(item.free_space_long), check_value(item.short_capacity), check_value(item.long_capacity), float(item.longitude), float(item.latitude), bool(True), (datetime.datetime.now()), (datetime.datetime.now()))
             cursor.execute(sql, val)
             count+=1
         connection.commit()
