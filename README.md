@@ -22,6 +22,18 @@ This project makes it possible to read garages data from the API of
 [garages_amsterdam](https://github.com/klaasnicolaas/garages_amsterdam)
 and write it to a Laravel database.
 
+## Set-up
+
+Build docker image:
+```bash
+docker build -t garages-amsterdam .
+```
+
+Deploy stack:
+```bash'
+docker stack deploy -c cities/amsterdam.yml garages
+```
+
 ## Contributing
 
 Would you like to contribute to the development of this project? Then read the prepared [contribution guidelines](CONTRIBUTING.md) and go ahead!
