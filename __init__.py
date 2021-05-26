@@ -35,8 +35,21 @@ def check_value(value):
     else:
         return value
 
+def purge_database(city):
+    """Purge the database tabel."""
+    print(f'{TIME} - START met leeggooien van de database')
+    try:
+        sql = "DELETE FROM `garages_amsterdam` WHERE `city`=%s"
+        cursor.execute(sql, city)
+        connection.commit()
+    except Exception as e:
+        print(f'MySQL error: {e}')
+    finally:
+        print(f'{TIME} - Klaar met leegmaken van de database')
+
 def update_database(data_set):
     """Update the database with new data."""
+    # purge_database(CITY)
     print(f'{TIME} - START bijwerken van database met nieuwe data')
     count=1
     try:
