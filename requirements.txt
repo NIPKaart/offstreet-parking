@@ -5,7 +5,7 @@ cffi==1.14.5
 chardet==4.0.0
 cryptography==3.4.7
 garages-amsterdam==2.1.1
-idna==3.1
+idna==3.2
 multidict==5.1.0
 pycparser==2.20
 PyMySQL==1.0.2
