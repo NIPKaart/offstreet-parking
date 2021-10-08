@@ -1,5 +1,7 @@
-import datetime, aiohttp, asyncio, garages_amsterdam, os, pymysql, time
+"""Scrape tool for parking garage into NIPKaart system."""
+import cities.amsterdam as amsterdam
 
+import asyncio, datetime, time, os
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -7,94 +9,24 @@ load_dotenv()
 env_path = Path('.')/'.env'
 load_dotenv(dotenv_path=env_path)
 
-# MYSQL credentials
-DB_SERVER   = os.getenv("DB_SERVER")
-DB_PORT     = int(os.getenv("DB_PORT"))
-DATABASE    = os.getenv("DATABASE")
-DB_USERNAME = os.getenv("DB_USERNAME")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-
 CITY        = os.getenv("CITY")
 WAIT_TIME   = int(os.getenv("WAIT_TIME"))
 
-SLEEP_TIME = (60 * WAIT_TIME) # gelijk aan 10 minuten
-
-# Connect to MySQL
-connection = pymysql.connect(host=DB_SERVER, port=DB_PORT, user=DB_USERNAME, password=DB_PASSWORD, database=DATABASE)
-cursor = connection.cursor()
-
-async def async_get_garages():
-    """Get garage data from API."""
-    async with aiohttp.ClientSession() as client:
-        return await garages_amsterdam.get_garages(client)
-
-def check_value(value):
-    """Check on null values."""
-    if value == "":
-        return 0
-    else:
-        return value
-
-def purge_database(city):
-    """Purge the database tabel."""
-    print(f'{TIME} - START met leeggooien van de database')
-    try:
-        sql = "DELETE FROM `garages_amsterdam` WHERE `city`=%s"
-        cursor.execute(sql, city)
-        connection.commit()
-    except Exception as e:
-        print(f'MySQL error: {e}')
-    finally:
-        print(f'{TIME} - Klaar met leegmaken van de database')
-
-def update_database(data_set):
-    """Update the database with new data."""
-    # purge_database(CITY)
-    print(f'{TIME} - START bijwerken van database met nieuwe data')
-    count=1
-    try:
-        for item in data_set:
-            sql = """INSERT INTO `garages_amsterdam` (id, name, city, state, free_space_short, free_space_long, short_capacity, long_capacity, longitude, latitude, visibility, created_at, updated_at) 
-                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY 
-                     UPDATE id=values(id),
-                            name=values(name),
-                            state=values(state),
-                            free_space_short=values(free_space_short),
-                            free_space_long=values(free_space_long),
-                            short_capacity=values(short_capacity),
-                            long_capacity=values(long_capacity),
-                            longitude=values(longitude),
-                            latitude=values(latitude),
-                            updated_at=values(updated_at)"""
-            val = (count, str(item.garage_name), str(CITY) ,str(item.state), check_value(item.free_space_short), check_value(item.free_space_long), check_value(item.short_capacity), check_value(item.long_capacity), float(item.longitude), float(item.latitude), bool(True), (datetime.datetime.now()), (datetime.datetime.now()))
-            cursor.execute(sql, val)
-            count+=1
-        connection.commit()
-
-    except Exception as e:
-        print(f'MySQL error: {e}')
-    finally:
-        print(f'{TIME} - KLAAR met updaten van database')
-
-def test_connection():
-    """Test the connection with MySQL Database."""
-    try:
-        cursor.execute('SELECT VERSION()')
-        version = cursor.fetchone()
-        print(f'Database version: {version[0]}')
-    except Exception as e:
-        print(f'MySQL error: {e}')
-    finally:
-        cursor.close()
-        connection.close()
+testing = False
 
 if __name__ == '__main__':
-    print("start scrape program")
-    # data_set = asyncio.run(async_get_garages())
-    # test_connection()
-    while True:
-        TIME = datetime.datetime.now().strftime('%H:%M:%S')
-        print(f'----------START----------')
-        update_database(asyncio.run(async_get_garages()))
-        print(f'----------DONE----------')
-        time.sleep(SLEEP_TIME)
+    print("--- Start scraping program ---")
+    if testing:
+        if CITY == "Amsterdam":
+            data_set = asyncio.run(amsterdam.async_get_garages())
+            print(data_set)
+            amsterdam.test_connection()
+    else:
+        while True:
+            TIME = datetime.datetime.now().strftime('%H:%M:%S')
+            print(f'-------- START-{CITY} ---------')
+            if CITY == "Amsterdam":
+                data_set = asyncio.run(amsterdam.async_get_garages())
+                amsterdam.update_database(data_set, CITY, TIME)
+            print(f'--------- DONE-{CITY} ---------')
+            time.sleep(60 * WAIT_TIME)
