@@ -18,20 +18,22 @@
 
 ## About
 
-This project makes it possible to read garages data from the API of
-[garages_amsterdam](https://github.com/klaasnicolaas/garages_amsterdam)
-and write it to a Laravel database.
+This project makes it possible to read garages data from their API and write it to a Laravel database to use within NIPKaart.
+
+## Supported
+
+- Municipality of [Amsterdam](https://github.com/klaasnicolaas/garages_amsterdam)
 
 ## Set-up
 
-Build docker image:
+1. Change the `city` and `wait_time` in the **.env** file.
+2. Build docker image
 ```bash
-docker build -t garages-amsterdam .
+docker build -t nipkaart-garages-[CITY] .
 ```
-
-Deploy stack:
-```bash'
-docker stack deploy -c cities/amsterdam.yml garages
+3. Deploy the stack
+```bash
+docker stack deploy -c cities/[CITY].yml garages
 ```
 
 ## Contributing
