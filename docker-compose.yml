@@ -1,13 +1,12 @@
 # Docker compose STACK file
 version: "3"
 services:
-  # Scrape Amsterdam Service
-  scrape_garages_amsterdam:
+  # Scrape Service
+  test_garage:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: "NIPKaart_garages_${CITY}"
-    image: garages-amsterdam:latest
+    container_name: "NIPKaart_${CITY}"
     networks:
       - backend
     restart: on-failure

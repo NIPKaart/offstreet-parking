@@ -3,7 +3,7 @@ version: "3"
 services:
   # Scrape Amsterdam Service
   nipkaart_amsterdam:
-    image: garages-amsterdam:latest
+    image: nipkaart-garages-amsterdam:latest
     networks:
       - backend
     deploy:
