@@ -3,7 +3,7 @@ async-timeout==4.0.2
 attrs==21.2.0
 cffi==1.15.0
 chardet==4.0.0
-cryptography==36.0.0
+cryptography==36.0.1
 garages-amsterdam==2.1.1
 idna==3.3
 multidict==5.2.0
