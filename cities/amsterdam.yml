@@ -4,6 +4,8 @@ services:
   # Scrape Amsterdam Service
   nipkaart_amsterdam:
     image: nipkaart-garages-amsterdam:latest
+    environment:
+      - TZ=Europe/Amsterdam
     networks:
       - backend
     deploy:
