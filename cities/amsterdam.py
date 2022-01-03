@@ -1,11 +1,14 @@
-import datetime, aiohttp, garages_amsterdam
+"""Python script for Garages Amsterdam data."""
+import datetime
+from garages_amsterdam import Garage, GaragesAmsterdam
 
 from database import connection, cursor
 
 async def async_get_garages():
     """Get garage data from API."""
-    async with aiohttp.ClientSession() as client:
-        return await garages_amsterdam.get_garages(client)
+    async with GaragesAmsterdam() as client:
+        garages: Garage = await client.all_garages()
+        return garages
 
 def check_value(value):
     """Check on null values."""
