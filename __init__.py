@@ -19,7 +19,11 @@ if __name__ == '__main__':
     if testing:
         if CITY == "Amsterdam":
             data_set = asyncio.run(amsterdam.async_get_garages())
-            print(data_set)
+            count: int
+            for index, item in enumerate(data_set, 1):
+                count = index
+                print(item)
+            print(f"{count} parkeergarages gevonden")
             amsterdam.test_connection()
     else:
         while True:
