@@ -4,7 +4,7 @@ attrs==21.4.0
 cffi==1.15.0
 chardet==4.0.0
 cryptography==36.0.1
-garages-amsterdam==2.1.1
+garages-amsterdam==3.2.1
 idna==3.3
 multidict==5.2.0
 pycparser==2.21
