@@ -6,7 +6,7 @@ chardet==4.0.0
 cryptography==36.0.1
 garages-amsterdam==3.2.1
 idna==3.3
-multidict==5.2.0
+multidict==6.0.1
 pycparser==2.21
 PyMySQL==1.0.2
 python-dotenv==0.19.2
