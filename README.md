@@ -26,12 +26,16 @@ This project makes it possible to read garages data from their API and write it 
 
 ## Set-up
 
-1. Change the `city` and `wait_time` in the **.env** file.
-2. Build docker image
+1. Create a `.env` file
+```bash
+cp .env.example .env
+```
+2. Change the `city` and `wait_time` in the **.env** file.
+3. Build docker image
 ```bash
 docker build -t nipkaart-garages-[CITY] .
 ```
-3. Deploy the stack
+4. Deploy the stack
 ```bash
 docker stack deploy -c cities/[CITY].yml garages
 ```
@@ -68,15 +72,15 @@ SOFTWARE.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2022.svg?style=for-the-badge
-[contributors-shield]: https://img.shields.io/github/contributors/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[contributors-url]: https://github.com/klaasnicolaas/nipkaart-scraper/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[forks-url]: https://github.com/klaasnicolaas/nipkaart-scraper/network/members
-[stars-shield]: https://img.shields.io/github/stars/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[stars-url]: https://github.com/klaasnicolaas/nipkaart-scraper/stargazers
-[issues-shield]: https://img.shields.io/github/issues/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[issues-url]: https://github.com/klaasnicolaas/nipkaart-scraper/issues
-[license-shield]: https://img.shields.io/github/license/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
-[commits]: https://github.com/klaasnicolaas/nipkaart-scraper/commits/master
-[last-commit-shield]: https://img.shields.io/github/last-commit/klaasnicolaas/nipkaart-scraper.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[contributors-url]: https://github.com/klaasnicolaas/nipkaart-garages/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[forks-url]: https://github.com/klaasnicolaas/nipkaart-garages/network/members
+[stars-shield]: https://img.shields.io/github/stars/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[stars-url]: https://github.com/klaasnicolaas/nipkaart-garages/stargazers
+[issues-shield]: https://img.shields.io/github/issues/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[issues-url]: https://github.com/klaasnicolaas/nipkaart-garages/issues
+[license-shield]: https://img.shields.io/github/license/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[commits-shield]: https://img.shields.io/github/commit-activity/y/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[commits]: https://github.com/klaasnicolaas/nipkaart-garages/commits/master
+[last-commit-shield]: https://img.shields.io/github/last-commit/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
