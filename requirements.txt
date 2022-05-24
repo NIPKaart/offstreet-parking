@@ -3,12 +3,12 @@ async-timeout==4.0.2
 attrs==21.4.0
 cffi==1.15.0
 chardet==4.0.0
-cryptography==36.0.1
+cryptography==37.0.2
 garages-amsterdam==3.2.1
 idna==3.3
 multidict==6.0.2
 pycparser==2.21
 PyMySQL==1.0.2
-python-dotenv==0.19.2
-typing-extensions==4.1.1
+python-dotenv==0.20.0
+typing-extensions==4.2.0
 yarl==1.7.2
