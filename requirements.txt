@@ -1,7 +1,7 @@
 aiohttp==3.8.1
 async-timeout==4.0.2
 attrs==21.4.0
-cffi==1.15.0
+cffi==1.15.1
 chardet==5.0.0
 cryptography==37.0.3
 garages-amsterdam==4.0.0
