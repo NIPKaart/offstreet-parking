@@ -4,11 +4,13 @@ from garages_amsterdam import Garage, GaragesAmsterdam
 
 from database import connection, cursor, purge_database
 
+
 async def async_get_garages():
     """Get garage data from API."""
     async with GaragesAmsterdam() as client:
         garages: Garage = await client.all_garages()
         return garages
+
 
 def check_value(value):
     """Check on null values."""
@@ -17,10 +19,11 @@ def check_value(value):
     else:
         return value
 
+
 def update_database(data_set, municipality, time):
     """Update the database with new data."""
     # purge_database(municipality, time)
-    print(f'{time} - START bijwerken van database met nieuwe data')
+    print(f"{time} - START bijwerken van database met nieuwe data")
     try:
         for item in data_set:
             location_id = f"ams-{item.garage_id[0:9]}-{item.garage_name.split(' ')[0]}"
@@ -37,11 +40,27 @@ def update_database(data_set, municipality, time):
                             longitude=values(longitude),
                             latitude=values(latitude),
                             updated_at=values(updated_at)"""
-            val = (location_id, str(item.garage_name), int(157), int(8), str(municipality) ,str(item.state), check_value(item.free_space_short), check_value(item.free_space_long), check_value(item.short_capacity),
-                   check_value(item.long_capacity), item.availability_pct, float(item.longitude), float(item.latitude), bool(True), (datetime.datetime.now()), (datetime.datetime.now()))
+            val = (
+                location_id,
+                str(item.garage_name),
+                int(157),
+                int(8),
+                str(municipality),
+                str(item.state),
+                check_value(item.free_space_short),
+                check_value(item.free_space_long),
+                check_value(item.short_capacity),
+                check_value(item.long_capacity),
+                item.availability_pct,
+                float(item.longitude),
+                float(item.latitude),
+                bool(True),
+                (datetime.datetime.now()),
+                (datetime.datetime.now()),
+            )
             cursor.execute(sql, val)
         connection.commit()
     except Exception as e:
-        print(f'MySQL error: {e}')
+        print(f"MySQL error: {e}")
     finally:
-        print(f'{time} - KLAAR met updaten van database')
+        print(f"{time} - KLAAR met updaten van database")

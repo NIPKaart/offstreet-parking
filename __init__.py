@@ -8,17 +8,18 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 load_dotenv()
-env_path = Path('.')/'.env'
+env_path = Path(".") / ".env"
 load_dotenv(dotenv_path=env_path)
 
-CITY        = os.getenv("CITY")
-WAIT_TIME   = int(os.getenv("WAIT_TIME"))
+CITY = os.getenv("CITY")
+WAIT_TIME = int(os.getenv("WAIT_TIME"))
 
 testing = False
 
+
 def test_data(data_set):
     """Test the data.
-    
+
     Args:
         data_set (list): List of data.
     """
@@ -28,7 +29,8 @@ def test_data(data_set):
         print(item)
     print(f"{count} parkeergarages gevonden")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print("--- Start scraping program ---")
     if testing:
         if CITY == "Amsterdam":
@@ -40,13 +42,13 @@ if __name__ == '__main__':
         database.test_connection()
     else:
         while True:
-            TIME = datetime.datetime.now().strftime('%H:%M:%S')
-            print(f'-------- START-{CITY} ---------')
+            TIME = datetime.datetime.now().strftime("%H:%M:%S")
+            print(f"-------- START-{CITY} ---------")
             if CITY == "Amsterdam":
                 data_set = asyncio.run(amsterdam.async_get_garages())
                 amsterdam.update_database(data_set, CITY, TIME)
             elif CITY == "Hamburg":
                 data_set = asyncio.run(hamburg.async_get_parking(bulk="true"))
                 hamburg.update_database(data_set, CITY, TIME)
-            print(f'--------- DONE-{CITY} ---------')
+            print(f"--------- DONE-{CITY} ---------")
             time.sleep(60 * WAIT_TIME)
