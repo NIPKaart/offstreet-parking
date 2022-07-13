@@ -1,8 +1,9 @@
 """Setup database connection."""
-import pymysql, os
-
-from dotenv import load_dotenv
+import os
 from pathlib import Path
+
+import pymysql
+from dotenv import load_dotenv
 
 load_dotenv()
 env_path = Path(".") / ".env"

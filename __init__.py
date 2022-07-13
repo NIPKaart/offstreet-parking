@@ -1,11 +1,15 @@
 """Scrape tool for parking garage into NIPKaart system."""
+import asyncio
+import datetime
+import os
+import time
+from pathlib import Path
+
+from dotenv import load_dotenv
+
 import cities.amsterdam as amsterdam
 import cities.hamburg as hamburg
-
-import asyncio, datetime, time, os
 import database as database
-from dotenv import load_dotenv
-from pathlib import Path
 
 load_dotenv()
 env_path = Path(".") / ".env"

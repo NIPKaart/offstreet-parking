@@ -1,8 +1,9 @@
 """Python script for Garages Amsterdam data."""
 import datetime
+
 from garages_amsterdam import Garage, GaragesAmsterdam
 
-from database import connection, cursor, purge_database
+from database import connection, cursor
 
 
 async def async_get_garages():
@@ -27,8 +28,8 @@ def update_database(data_set, municipality, time):
     try:
         for item in data_set:
             location_id = f"ams-{item.garage_id[0:9]}-{item.garage_name.split(' ')[0]}"
-            sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, state, free_space_short, free_space_long, short_capacity, long_capacity, availability_pct, longitude, latitude, visibility, created_at, updated_at) 
-                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY 
+            sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, state, free_space_short, free_space_long, short_capacity, long_capacity, availability_pct, longitude, latitude, visibility, created_at, updated_at)
+                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
                      UPDATE id=values(id),
                             name=values(name),
                             state=values(state),

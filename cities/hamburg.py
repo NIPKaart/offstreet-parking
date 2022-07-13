@@ -1,8 +1,10 @@
 """Python script for Park and Ride Hamburg data."""
-import datetime, json
-from hamburg import UDPHamburg, ParkAndRide
+import datetime
+import json
 
-from database import connection, cursor, purge_database
+from hamburg import ParkAndRide, UDPHamburg
+
+from database import connection, cursor
 
 
 async def async_get_parking(bulk="false"):
@@ -18,8 +20,8 @@ def update_database(data_set, municipality, time):
     print(f"{time} - START bijwerken van database met nieuwe data")
     try:
         for item in data_set:
-            sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, free_space_short, short_capacity, availability_pct, prices, url, longitude, latitude, visibility, created_at, updated_at) 
-                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY 
+            sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, free_space_short, short_capacity, availability_pct, prices, url, longitude, latitude, visibility, created_at, updated_at)
+                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
                      UPDATE id=values(id),
                             name=values(name),
                             state=values(state),
