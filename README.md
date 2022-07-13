@@ -43,6 +43,22 @@ docker build -t nipkaart-garages-[CITY] .
 docker stack deploy -c cities/[CITY].yml garages
 ```
 
+### Use of pre-commit
+
+This project provides the option to use pre-commit, so that each commit is checked for code review before being pushed through.
+
+Within your virtual environment you can use this command to install it:
+
+```bash
+pre-commit install
+```
+
+If you want to perform a full check in the meantime:
+
+```bash
+pre-commit run --all-files
+```
+
 ## Contributing
 
 Would you like to contribute to the development of this project? Then read the prepared [contribution guidelines](CONTRIBUTING.md) and go ahead!
