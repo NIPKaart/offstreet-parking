@@ -3,6 +3,8 @@ import datetime
 
 from garages_amsterdam import Garage, GaragesAmsterdam
 
+# from ..database import purge_database
+
 
 async def async_get_garages():
     """Get garage data from API."""

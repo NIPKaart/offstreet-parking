@@ -22,10 +22,10 @@ This project makes it possible to read garages / park + ride data from their API
 
 ## Supported
 
-| Country | City | Type |
-|:--------|:-----|:-----|
-| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and ride |
+| Country | City | Type | Update interval |
+|:--------|:-----|:-----|:----------------|
+| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and ride | Every 30 minutes |
 
 ## Set-up
 
@@ -40,7 +40,7 @@ docker build -t nipkaart-garages-[CITY] .
 ```
 4. Deploy the stack
 ```bash
-docker stack deploy -c cities/[CITY].yml garages
+docker stack deploy -c deploy/[CITY].yml garages
 ```
 
 ### Use of pre-commit

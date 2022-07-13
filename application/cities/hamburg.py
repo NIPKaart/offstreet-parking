@@ -4,6 +4,8 @@ import json
 
 from hamburg import ParkAndRide, UDPHamburg
 
+# from ..database import purge_database
+
 
 async def async_get_parking(bulk="false"):
     """Get parking data from API."""
