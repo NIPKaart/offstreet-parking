@@ -4,8 +4,6 @@ import json
 
 from hamburg import ParkAndRide, UDPHamburg
 
-from database import connection, cursor
-
 
 async def async_get_parking(bulk="false"):
     """Get parking data from API."""
@@ -14,7 +12,7 @@ async def async_get_parking(bulk="false"):
         return parking
 
 
-def update_database(data_set, municipality, time):
+def update_database(data_set, municipality, time, connection, cursor):
     """Update the database with new data."""
     # purge_database(municipality, time)
     print(f"{time} - START bijwerken van database met nieuwe data")
@@ -52,7 +50,7 @@ def update_database(data_set, municipality, time):
             # print(val)
             cursor.execute(sql, val)
         connection.commit()
-    except Exception as e:
-        print(f"MySQL error: {e}")
+    except Exception as error:
+        print(f"MySQL error: {error}")
     finally:
         print(f"{time} - KLAAR met updaten van database")

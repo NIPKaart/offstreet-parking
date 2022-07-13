@@ -33,8 +33,8 @@ def test_connection():
         cursor.execute("SELECT VERSION()")
         version = cursor.fetchone()
         print(f"Database version: {version[0]}")
-    except Exception as e:
-        print(f"MySQL error: {e}")
+    except Exception as error:
+        print(f"MySQL error: {error}")
     finally:
         cursor.close()
         connection.close()
@@ -47,7 +47,7 @@ def purge_database(municipality, time):
         sql = "DELETE FROM `parking_garages` WHERE `municipality`=%s"
         cursor.execute(sql, municipality)
         connection.commit()
-    except Exception as e:
-        print(f"MySQL error: {e}")
+    except Exception as error:
+        print(f"MySQL error: {error}")
     finally:
         print(f"{time} - Klaar met leegmaken van de database")

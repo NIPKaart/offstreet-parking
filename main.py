@@ -7,9 +7,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-import cities.amsterdam as amsterdam
-import cities.hamburg as hamburg
-import database as database
+from application.cities import amsterdam, hamburg
+from application.database import connection, cursor, test_connection
 
 load_dotenv()
 env_path = Path(".") / ".env"
@@ -18,7 +17,7 @@ load_dotenv(dotenv_path=env_path)
 CITY = os.getenv("CITY")
 WAIT_TIME = int(os.getenv("WAIT_TIME"))
 
-testing = False
+TESTING = False
 
 
 def test_data(data_set):
@@ -36,23 +35,23 @@ def test_data(data_set):
 
 if __name__ == "__main__":
     print("--- Start scraping program ---")
-    if testing:
+    if TESTING:
         if CITY == "Amsterdam":
-            data_set = asyncio.run(amsterdam.async_get_garages())
-            test_data(data_set)
+            data = asyncio.run(amsterdam.async_get_garages())
+            test_data(data)
         elif CITY == "Hamburg":
-            data_set = asyncio.run(hamburg.async_get_parking())
-            test_data(data_set)
-        database.test_connection()
+            data = asyncio.run(hamburg.async_get_parking())
+            test_data(data)
+        test_connection()
     else:
         while True:
             TIME = datetime.datetime.now().strftime("%H:%M:%S")
             print(f"-------- START-{CITY} ---------")
             if CITY == "Amsterdam":
-                data_set = asyncio.run(amsterdam.async_get_garages())
-                amsterdam.update_database(data_set, CITY, TIME)
+                data = asyncio.run(amsterdam.async_get_garages())
+                amsterdam.update_database(data, CITY, TIME, connection, cursor)
             elif CITY == "Hamburg":
-                data_set = asyncio.run(hamburg.async_get_parking(bulk="true"))
-                hamburg.update_database(data_set, CITY, TIME)
+                data = asyncio.run(hamburg.async_get_parking(bulk="true"))
+                hamburg.update_database(data, CITY, TIME, connection, cursor)
             print(f"--------- DONE-{CITY} ---------")
             time.sleep(60 * WAIT_TIME)
