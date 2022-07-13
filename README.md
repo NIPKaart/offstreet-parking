@@ -18,11 +18,14 @@
 
 ## About
 
-This project makes it possible to read garages data from their API and write it to a Laravel database to use within NIPKaart.
+This project makes it possible to read garages / park + ride data from their API and write it to a Laravel database to use within NIPKaart.
 
 ## Supported
 
-- Municipality of [Amsterdam](https://github.com/klaasnicolaas/garages_amsterdam)
+| Country | City | Type |
+|:--------|:-----|:-----|
+| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and ride |
 
 ## Set-up
 

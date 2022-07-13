@@ -1,0 +1,18 @@
+# Docker compose STACK file
+version: "3"
+services:
+  # Scrape Hamburg Service
+  nipkaart_hamburg:
+    image: nipkaart-garages-hamburg:latest
+    environment:
+      - TZ=Europe/Amsterdam
+    networks:
+      - backend
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+# Networks
+networks:
+  backend:
+    driver: overlay
