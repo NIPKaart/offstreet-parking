@@ -11,6 +11,7 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+        delay: 3m
 
 # Networks
 networks:

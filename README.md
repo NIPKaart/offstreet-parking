@@ -101,5 +101,5 @@ SOFTWARE.
 [issues-url]: https://github.com/klaasnicolaas/nipkaart-garages/issues
 [license-shield]: https://img.shields.io/github/license/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[commits]: https://github.com/klaasnicolaas/nipkaart-garages/commits/master
+[commits]: https://github.com/klaasnicolaas/nipkaart-garages/commits/main
 [last-commit-shield]: https://img.shields.io/github/last-commit/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
