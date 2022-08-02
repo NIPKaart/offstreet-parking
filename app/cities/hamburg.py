@@ -20,10 +20,11 @@ def update_database(data_set, municipality, time):
     print(f"{time} - START bijwerken van database met nieuwe data")
     try:
         for item in data_set:
-            location_id = (
+            temp_location_id = (
                 f"{item.spot_id[0:5]}_{item.name.replace(' ', '_')}_{item.capacity}"
             )
-            location_id = location_id.replace(".", "-")
+            temp_location_id = temp_location_id.replace(".", "-")
+            location_id = temp_location_id.replace("ü", "u")
             sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, free_space_short, short_capacity, availability_pct, prices, url, longitude, latitude, visibility, created_at, updated_at)
                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
                      UPDATE id=values(id),
