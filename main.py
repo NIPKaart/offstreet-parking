@@ -7,8 +7,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from application.cities import amsterdam, hamburg
-from application.database import connection, cursor, test_connection
+from app.cities import amsterdam, hamburg
+from app.database import test_connection
+from app.helpers import test_data
 
 load_dotenv()
 env_path = Path(".") / ".env"
@@ -18,19 +19,6 @@ CITY = os.getenv("CITY")
 WAIT_TIME = int(os.getenv("WAIT_TIME"))
 
 TESTING = False
-
-
-def test_data(data_set):
-    """Test the data.
-
-    Args:
-        data_set (list): List of data.
-    """
-    count: int
-    for index, item in enumerate(data_set, 1):
-        count = index
-        print(item)
-    print(f"{count} parkeergarages gevonden")
 
 
 if __name__ == "__main__":
@@ -46,12 +34,12 @@ if __name__ == "__main__":
     else:
         while True:
             TIME = datetime.datetime.now().strftime("%H:%M:%S")
-            print(f"-------- START-{CITY} ---------")
+            print(f"-------- START {CITY} ---------")
             if CITY == "Amsterdam":
                 data = asyncio.run(amsterdam.async_get_garages())
-                amsterdam.update_database(data, CITY, TIME, connection, cursor)
+                amsterdam.update_database(data, CITY, TIME)
             elif CITY == "Hamburg":
                 data = asyncio.run(hamburg.async_get_parking(bulk="true"))
-                hamburg.update_database(data, CITY, TIME, connection, cursor)
-            print(f"--------- DONE-{CITY} ---------")
+                hamburg.update_database(data, CITY, TIME)
+            print(f"--------- DONE {CITY} ---------")
             time.sleep(60 * WAIT_TIME)
