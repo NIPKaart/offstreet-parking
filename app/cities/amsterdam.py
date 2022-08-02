@@ -3,7 +3,8 @@ import datetime
 
 from garages_amsterdam import Garage, GaragesAmsterdam
 
-# from ..database import purge_database
+from app.database import connection, cursor
+from app.helpers import get_unique_number
 
 
 async def async_get_garages():
@@ -20,13 +21,13 @@ def check_value(value):
     return value
 
 
-def update_database(data_set, municipality, time, connection, cursor):
+def update_database(data_set, municipality, time):
     """Update the database with new data."""
     # purge_database(municipality, time)
     print(f"{time} - START bijwerken van database met nieuwe data")
     try:
         for item in data_set:
-            location_id = f"ams-{item.garage_id[0:9]}-{item.garage_name.split(' ')[0]}"
+            location_id = f"ams-{get_unique_number(item.latitude, item.longitude)}"
             sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, state, free_space_short, free_space_long, short_capacity, long_capacity, availability_pct, longitude, latitude, visibility, created_at, updated_at)
                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
                      UPDATE id=values(id),
@@ -58,6 +59,7 @@ def update_database(data_set, municipality, time, connection, cursor):
                 (datetime.datetime.now()),
                 (datetime.datetime.now()),
             )
+            # print(val)
             cursor.execute(sql, val)
         connection.commit()
     except Exception as error:
