@@ -25,7 +25,7 @@ This project makes it possible to read garages / park + ride data from their API
 | Country | City | Type | Update interval |
 |:--------|:-----|:-----|:----------------|
 | Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and ride | Every 30 minutes |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes |
 
 ## Set-up
 
@@ -90,16 +90,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 <!-- MARKDOWN LINKS & IMAGES -->
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2022.svg?style=for-the-badge
-[contributors-shield]: https://img.shields.io/github/contributors/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[contributors-url]: https://github.com/klaasnicolaas/nipkaart-garages/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[forks-url]: https://github.com/klaasnicolaas/nipkaart-garages/network/members
-[stars-shield]: https://img.shields.io/github/stars/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[stars-url]: https://github.com/klaasnicolaas/nipkaart-garages/stargazers
-[issues-shield]: https://img.shields.io/github/issues/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[issues-url]: https://github.com/klaasnicolaas/nipkaart-garages/issues
-[license-shield]: https://img.shields.io/github/license/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
-[commits]: https://github.com/klaasnicolaas/nipkaart-garages/commits/main
-[last-commit-shield]: https://img.shields.io/github/last-commit/klaasnicolaas/nipkaart-garages.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2022.svg
+[contributors-shield]: https://img.shields.io/github/contributors/nipkaart/nipkaart-garages.svg
+[contributors-url]: https://github.com/nipkaart/nipkaart-garages/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/nipkaart/nipkaart-garages.svg
+[forks-url]: https://github.com/nipkaart/nipkaart-garages/network/members
+[stars-shield]: https://img.shields.io/github/stars/nipkaart/nipkaart-garages.svg
+[stars-url]: https://github.com/nipkaart/nipkaart-garages/stargazers
+[issues-shield]: https://img.shields.io/github/issues/nipkaart/nipkaart-garages.svg
+[issues-url]: https://github.com/nipkaart/nipkaart-garages/issues
+[license-shield]: https://img.shields.io/github/license/nipkaart/nipkaart-garages.svg
+[commits-shield]: https://img.shields.io/github/commit-activity/y/nipkaart/nipkaart-garages.svg
+[commits]: https://github.com/nipkaart/nipkaart-garages/commits/main
+[last-commit-shield]: https://img.shields.io/github/last-commit/nipkaart/nipkaart-garages.svg
