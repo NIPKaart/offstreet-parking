@@ -6,6 +6,9 @@ from garages_amsterdam import Garage, GaragesAmsterdam
 from app.database import connection, cursor
 from app.helpers import get_unique_number
 
+GEOCODE = "NL-NH"
+PHONE_CODE = "020"
+
 
 async def async_get_garages():
     """Get garage data from API."""
@@ -27,9 +30,9 @@ def update_database(data_set, municipality, time):
     print(f"{time} - START bijwerken van database met nieuwe data")
     try:
         for item in data_set:
-            location_id = f"ams-{get_unique_number(item.latitude, item.longitude)}"
-            sql = """INSERT INTO `parking_garages` (id, name, country_id, province_id, municipality, state, free_space_short, free_space_long, short_capacity, long_capacity, availability_pct, longitude, latitude, visibility, created_at, updated_at)
-                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
+            location_id = f"{GEOCODE}-{PHONE_CODE}-{get_unique_number(item.latitude, item.longitude)}"
+            sql = """INSERT INTO `parking_offstreet` (id, name, country_id, province_id, municipality, state, free_space_short, free_space_long, short_capacity, long_capacity, availability_pct, parking_type, longitude, latitude, visibility, created_at, updated_at)
+                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY
                      UPDATE id=values(id),
                             name=values(name),
                             state=values(state),
@@ -53,6 +56,7 @@ def update_database(data_set, municipality, time):
                 check_value(item.short_capacity),
                 check_value(item.long_capacity),
                 item.availability_pct,
+                "garage",
                 float(item.longitude),
                 float(item.latitude),
                 bool(True),
