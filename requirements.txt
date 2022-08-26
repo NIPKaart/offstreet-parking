@@ -16,7 +16,7 @@ filelock==3.8.0
 flake8==5.0.4
 frozenlist==1.3.1
 garages-amsterdam==4.1.0
-hamburg==0.2.3
+hamburg==0.3.0
 identify==2.5.3
 idna==3.3
 isort==5.10.1
