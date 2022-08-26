@@ -1,4 +1,4 @@
-"""Scrape tool for parking garage into NIPKaart system."""
+"""Upload tool for off-street parking into NIPKaart system."""
 import asyncio
 import datetime
 import os
@@ -22,7 +22,7 @@ TESTING = False
 
 
 if __name__ == "__main__":
-    print("--- Start scraping program ---")
+    print("--- Start upload program ---")
     if TESTING:
         if CITY == "Amsterdam":
             data = asyncio.run(amsterdam.async_get_garages())

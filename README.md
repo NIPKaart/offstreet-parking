@@ -3,14 +3,15 @@
 *** github_username, repo_name
 -->
 
-# ⚙️ NIPKaart Garages - Scraper tool
+# ⚙️ Off-street parking - Upload tool
 <!-- PROJECT SHIELDS -->
 ![Project Maintenance][maintenance-shield]
 [![License][license-shield]](LICENSE.md)
+[![Contributors][contributors-shield]][contributors-url]
 
 [![GitHub Activity][commits-shield]][commits]
 [![GitHub Last Commit][last-commit-shield]][commits]
-[![Contributors][contributors-shield]][contributors-url]
+[![Linting][linting-shield]][linting-url]
 
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -18,7 +19,7 @@
 
 ## About
 
-This project makes it possible to read garages / park + ride data from their API and write it to a Laravel database to use within NIPKaart.
+This project makes it possible to collect data from municipalities about off-street parking spaces (garages or park and rides) and upload them to the [NIPKaart][nipkaart] platform.
 
 ## Supported
 
@@ -33,14 +34,14 @@ This project makes it possible to read garages / park + ride data from their API
 ```bash
 cp .env.example .env
 ```
-2. Change the `city` and `wait_time` in the **.env** file.
-3. Build docker image
+2. Change the `city` and `wait_time` (in minutes) in the **.env** file.
+3. Build docker image, type could be `parkandride` or `garages`
 ```bash
-docker build -t nipkaart-garages-[CITY] .
+docker build -t nipkaart-[TYPE]-[CITY] .
 ```
 4. Deploy the stack
 ```bash
-docker stack deploy -c deploy/[CITY].yml garages
+docker stack deploy -c deploy/[CITY].yml offstreet
 ```
 
 ### Use of pre-commit
@@ -89,17 +90,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+[nipkaart]: https://nipkaart.nl
+
 <!-- MARKDOWN LINKS & IMAGES -->
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2022.svg
-[contributors-shield]: https://img.shields.io/github/contributors/nipkaart/nipkaart-garages.svg
-[contributors-url]: https://github.com/nipkaart/nipkaart-garages/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/nipkaart/nipkaart-garages.svg
-[forks-url]: https://github.com/nipkaart/nipkaart-garages/network/members
-[stars-shield]: https://img.shields.io/github/stars/nipkaart/nipkaart-garages.svg
-[stars-url]: https://github.com/nipkaart/nipkaart-garages/stargazers
-[issues-shield]: https://img.shields.io/github/issues/nipkaart/nipkaart-garages.svg
-[issues-url]: https://github.com/nipkaart/nipkaart-garages/issues
-[license-shield]: https://img.shields.io/github/license/nipkaart/nipkaart-garages.svg
-[commits-shield]: https://img.shields.io/github/commit-activity/y/nipkaart/nipkaart-garages.svg
-[commits]: https://github.com/nipkaart/nipkaart-garages/commits/main
-[last-commit-shield]: https://img.shields.io/github/last-commit/nipkaart/nipkaart-garages.svg
+[contributors-shield]: https://img.shields.io/github/contributors/nipkaart/offstreet-parking.svg
+[contributors-url]: https://github.com/nipkaart/offstreet-parking/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/nipkaart/offstreet-parking.svg
+[forks-url]: https://github.com/nipkaart/offstreet-parking/network/members
+[stars-shield]: https://img.shields.io/github/stars/nipkaart/offstreet-parking.svg
+[stars-url]: https://github.com/nipkaart/offstreet-parking/stargazers
+[issues-shield]: https://img.shields.io/github/issues/nipkaart/offstreet-parking.svg
+[issues-url]: https://github.com/nipkaart/offstreet-parking/issues
+[license-shield]: https://img.shields.io/github/license/nipkaart/offstreet-parking.svg
+[commits-shield]: https://img.shields.io/github/commit-activity/y/nipkaart/offstreet-parking.svg
+[commits]: https://github.com/nipkaart/offstreet-parking/commits/main
+[last-commit-shield]: https://img.shields.io/github/last-commit/nipkaart/offstreet-parking.svg
+[linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml/badge.svg
+[linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml

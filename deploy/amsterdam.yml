@@ -1,8 +1,8 @@
 # Docker compose STACK file
 version: "3"
 services:
-  # Scrape Amsterdam Service
-  nipkaart_amsterdam:
+  # Scrape Amsterdam - Garage Service
+  nipkaart_amsterdam_garages:
     image: nipkaart-garages-amsterdam:latest
     environment:
       - TZ=Europe/Amsterdam
@@ -11,7 +11,7 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 3m
+        delay: 5m
 
 # Networks
 networks:
