@@ -44,7 +44,7 @@ def purge_database(municipality, time):
     """Purge the database tabel."""
     print(f"{time} - START met leeggooien van de database")
     try:
-        sql = "DELETE FROM `parking_garages` WHERE `municipality`=%s"
+        sql = "DELETE FROM `parking_offstreet` WHERE `municipality`=%s"
         cursor.execute(sql, municipality)
         connection.commit()
     except Exception as error:
