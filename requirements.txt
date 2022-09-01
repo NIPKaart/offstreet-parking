@@ -3,7 +3,7 @@ aiosignal==1.2.0
 astroid==2.12.5
 async-timeout==4.0.2
 attrs==22.1.0
-black==22.6.0
+black==22.8.0
 cffi==1.15.1
 cfgv==3.3.1
 chardet==5.0.0
