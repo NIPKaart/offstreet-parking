@@ -1,6 +1,6 @@
 aiohttp==3.8.1
 aiosignal==1.2.0
-astroid==2.12.5
+astroid==2.12.6
 async-timeout==4.0.2
 attrs==22.1.0
 black==22.8.0
