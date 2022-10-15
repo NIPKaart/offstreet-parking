@@ -3,15 +3,17 @@
 *** github_username, repo_name
 -->
 
-# ⚙️ Off-street parking - Upload tool
-<!-- PROJECT SHIELDS -->
-![Project Maintenance][maintenance-shield]
-[![License][license-shield]](LICENSE.md)
-[![Contributors][contributors-shield]][contributors-url]
+<!-- Banner -->
+![alt Banner of the offstreet parking project](assets/banner_offstreet_parking.png)
 
+<!-- PROJECT SHIELDS -->
 [![GitHub Activity][commits-shield]][commits]
 [![GitHub Last Commit][last-commit-shield]][commits]
 [![Linting][linting-shield]][linting-url]
+
+![Project Maintenance][maintenance-shield]
+[![License][license-shield]](LICENSE.md)
+[![Contributors][contributors-shield]][contributors-url]
 
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -21,14 +23,16 @@
 
 This project makes it possible to collect data from municipalities about off-street parking spaces (garages or park and rides) and upload them to the [NIPKaart][nipkaart] platform.
 
-## Supported
+## Supported cities
 
 | Country | City | Type | Update interval |
 |:--------|:-----|:-----|:----------------|
 | Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
 | Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes |
 
-## Set-up
+## Development
+<details>
+  <summary>Click to expand!</summary>
 
 1. Create a `.env` file
 ```bash
@@ -59,6 +63,8 @@ If you want to perform a full check in the meantime:
 ```bash
 pre-commit run --all-files
 ```
+
+</details>
 
 ## Contributing
 
