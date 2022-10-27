@@ -20,7 +20,7 @@ hamburg==0.3.0
 identify==2.5.7
 idna==3.4
 isort==5.10.1
-lazy-object-proxy==1.7.1
+lazy-object-proxy==1.8.0
 mccabe==0.7.0
 multidict==6.0.2
 mypy-extensions==0.4.3
