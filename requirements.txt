@@ -41,7 +41,7 @@ ruamel.yaml.clib==0.2.7
 six==1.16.0
 toml==0.10.2
 tomli==2.0.1
-tomlkit==0.11.5
+tomlkit==0.11.6
 typing_extensions==4.4.0
 virtualenv==20.16.6
 wrapt==1.14.1
