@@ -28,7 +28,7 @@ nodeenv==1.7.0
 pathspec==0.10.2
 platformdirs==2.5.4
 pre-commit==2.20.0
-pre-commit-hooks==4.3.0
+pre-commit-hooks==4.4.0
 pycodestyle==2.10.0
 pycparser==2.21
 pyflakes==3.0.0
