@@ -19,7 +19,7 @@ garages-amsterdam==4.1.0
 hamburg==0.3.0
 identify==2.5.9
 idna==3.4
-isort==5.10.1
+isort==5.11.1
 lazy-object-proxy==1.8.0
 mccabe==0.7.0
 multidict==6.0.3
