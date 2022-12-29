@@ -12,7 +12,7 @@ click==8.1.3
 cryptography==38.0.4
 dill==0.3.6
 distlib==0.3.6
-filelock==3.8.2
+filelock==3.9.0
 flake8==6.0.0
 frozenlist==1.3.3
 garages-amsterdam==4.1.0
