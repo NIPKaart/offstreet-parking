@@ -1,7 +1,7 @@
 """Python script for Garages Amsterdam data."""
 import datetime
 
-from garages_amsterdam import Garage, GaragesAmsterdam
+from odp_amsterdam import Garage, ODPAmsterdam
 
 from app.database import connection, cursor
 from app.helpers import get_unique_number
@@ -12,7 +12,7 @@ PHONE_CODE = "020"
 
 async def async_get_garages():
     """Get garage data from API."""
-    async with GaragesAmsterdam() as client:
+    async with ODPAmsterdam() as client:
         garages: Garage = await client.all_garages()
         return garages
 
