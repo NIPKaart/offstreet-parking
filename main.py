@@ -33,13 +33,13 @@ if __name__ == "__main__":
         test_connection()
     else:
         while True:
-            TIME = datetime.datetime.now().strftime("%H:%M:%S")
+            CURRENT_TIME = datetime.datetime.now().strftime("%H:%M:%S")
             print(f"-------- START {CITY} ---------")
             if CITY == "Amsterdam":
                 data = asyncio.run(amsterdam.async_get_garages())
-                amsterdam.update_database(data, CITY, TIME)
+                amsterdam.update_database(data, CITY, CURRENT_TIME)
             elif CITY == "Hamburg":
                 data = asyncio.run(hamburg.async_get_parking(bulk="true"))
-                hamburg.update_database(data, CITY, TIME)
+                hamburg.update_database(data, CITY, CURRENT_TIME)
             print(f"--------- DONE {CITY} ---------")
             time.sleep(60 * WAIT_TIME)
