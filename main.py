@@ -1,10 +1,11 @@
 """Upload tool for off-street parking into NIPKaart system."""
 import asyncio
-import datetime
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
+import pytz
 from dotenv import load_dotenv
 
 from app.cities import amsterdam, hamburg
@@ -33,13 +34,21 @@ if __name__ == "__main__":
         test_connection()
     else:
         while True:
-            CURRENT_TIME = datetime.datetime.now().strftime("%H:%M:%S")
+            CURRENT_TIME = datetime.now().strftime("%H:%M:%S")
             print(f"-------- START {CITY} ---------")
             if CITY == "Amsterdam":
                 data = asyncio.run(amsterdam.async_get_garages())
                 amsterdam.update_database(data, CITY, CURRENT_TIME)
             elif CITY == "Hamburg":
-                data = asyncio.run(hamburg.async_get_parking(bulk="true"))
-                hamburg.update_database(data, CITY, CURRENT_TIME)
+                local_zone = pytz.timezone("Europe/Amsterdam")
+                local_time: datetime = datetime.now(tz=local_zone)
+
+                if local_time.hour >= 1:
+                    data = asyncio.run(hamburg.async_get_parking(bulk="true"))
+                    hamburg.update_database(data, CITY, CURRENT_TIME)
+                else:
+                    print(
+                        "Hamburg: Not updating database, time is between: 00:00 and 01:00."
+                    )
             print(f"--------- DONE {CITY} ---------")
             time.sleep(60 * WAIT_TIME)

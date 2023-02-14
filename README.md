@@ -28,7 +28,7 @@ This project makes it possible to collect data from municipalities about off-str
 | Country | City | Type | Update interval |
 |:--------|:-----|:-----|:----------------|
 | Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes (paused in midnight) |
 
 ## Development
 <details>
