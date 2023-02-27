@@ -35,7 +35,7 @@ pycparser==2.21
 pyflakes==3.0.1
 pylint==2.16.2
 PyMySQL==1.0.2
-python-dotenv==0.21.1
+python-dotenv==1.0.0
 pytz==2022.7.1
 PyYAML==6.0
 ruamel.yaml==0.17.21
