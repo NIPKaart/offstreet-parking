@@ -33,7 +33,7 @@ pre-commit-hooks==4.4.0
 pycodestyle==2.10.0
 pycparser==2.21
 pyflakes==3.0.1
-pylint==2.16.3
+pylint==2.16.4
 PyMySQL==1.0.2
 python-dotenv==1.0.0
 pytz==2022.7.1
