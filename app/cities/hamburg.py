@@ -23,6 +23,7 @@ def update_database(data_set, municipality, time):
     # purge_database(municipality, time)
     print(f"{time} - START bijwerken van database met nieuwe data")
     try:
+        connection.ping(reconnect=True)
         for item in data_set:
             location_id = f"{GEOCODE}-{PHONE_CODE}-{get_unique_number(item.latitude, item.longitude)}"
             sql = """INSERT INTO `parking_offstreet` (id, name, country_id, province_id, municipality, free_space_short, short_capacity, availability_pct, parking_type, prices, url, longitude, latitude, visibility, created_at, updated_at)
