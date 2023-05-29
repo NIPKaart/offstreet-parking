@@ -38,7 +38,7 @@ PyMySQL==1.0.3
 python-dotenv==1.0.0
 pytz==2023.3
 PyYAML==6.0
-ruamel.yaml==0.17.26
+ruamel.yaml==0.17.27
 ruamel.yaml.clib==0.2.7
 six==1.16.0
 toml==0.10.2
