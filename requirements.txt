@@ -24,7 +24,7 @@ mccabe==0.7.0
 multidict==6.0.4
 mypy-extensions==1.0.0
 nodeenv==1.8.0
-odp-amsterdam==5.1.0
+odp-amsterdam==5.1.1
 packaging==23.1
 pathspec==0.11.1
 platformdirs==3.8.0
