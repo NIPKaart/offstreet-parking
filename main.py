@@ -34,7 +34,9 @@ if __name__ == "__main__":
         test_connection()
     else:
         while True:
-            CURRENT_TIME = datetime.now().strftime("%H:%M:%S")
+            CURRENT_TIME = datetime.now(tz=pytz.timezone("Europe/Amsterdam")).strftime(
+                "%H:%M:%S",
+            )
             print(f"-------- START {CITY} ---------")
             if CITY == "Amsterdam":
                 data = asyncio.run(amsterdam.async_get_garages())
@@ -48,7 +50,7 @@ if __name__ == "__main__":
                     hamburg.update_database(data, CITY, CURRENT_TIME)
                 else:
                     print(
-                        "Hamburg: Not updating database, time is between: 00:00 and 01:00."
+                        "Hamburg: Not updating database, time between 00:00 and 01:00.",
                     )
             print(f"--------- DONE {CITY} ---------")
             time.sleep(60 * WAIT_TIME)
