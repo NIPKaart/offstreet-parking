@@ -149,8 +149,8 @@ SOFTWARE.
 [commits-shield]: https://img.shields.io/github/commit-activity/y/nipkaart/offstreet-parking.svg
 [commits]: https://github.com/nipkaart/offstreet-parking/commits/main
 [last-commit-shield]: https://img.shields.io/github/last-commit/nipkaart/offstreet-parking.svg
-[linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml/badge.svg
-[linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml
+[linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml/badge.svg
+[linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml
 
 [poetry-install]: https://python-poetry.org/docs/#installation
 [poetry]: https://python-poetry.org
