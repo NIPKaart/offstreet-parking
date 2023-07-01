@@ -12,7 +12,7 @@ def test_data(data_set: list) -> None:
     for index, item in enumerate(data_set, 1):
         count = index
         print(item)
-    print(f"{count} parkeergarages gevonden")
+    print(f"{count} parking garages found")
 
 
 def get_unique_number(lat: float, lon: float) -> int:
