@@ -1,0 +1,1 @@
+"""General class for cities."""

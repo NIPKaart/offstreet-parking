@@ -1,4 +1,5 @@
 """Setup database connection."""
+import datetime
 import os
 from pathlib import Path
 
@@ -27,27 +28,33 @@ connection = pymysql.connect(
 cursor = connection.cursor()
 
 
-def test_connection():
+def test_connection() -> None:
     """Test the connection with MySQL Database."""
     try:
         cursor.execute("SELECT VERSION()")
         version = cursor.fetchone()
         print(f"Database version: {version[0]}")
-    except Exception as error:
+    except pymysql.Error as error:
         print(f"MySQL error: {error}")
     finally:
         cursor.close()
         connection.close()
 
 
-def purge_database(municipality, time):
-    """Purge the database tabel."""
+def purge_database(municipality: str, time: datetime) -> None:
+    """Purge the database tabel.
+
+    Args:
+    ----
+        municipality (str): Name of the municipality.
+        time (datetime): Current time.
+    """
     print(f"{time} - START met leeggooien van de database")
     try:
         sql = "DELETE FROM `parking_offstreet` WHERE `municipality`=%s"
         cursor.execute(sql, municipality)
         connection.commit()
-    except Exception as error:
+    except pymysql.Error as error:
         print(f"MySQL error: {error}")
     finally:
         print(f"{time} - Klaar met leegmaken van de database")

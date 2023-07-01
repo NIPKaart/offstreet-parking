@@ -1,3 +1,10 @@
 # Folders
+.github
+data
 venv
 __pycache__
+.ruff_cache
+
+# Files
+.python-version
+poetry.lock

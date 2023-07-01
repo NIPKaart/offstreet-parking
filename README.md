@@ -31,37 +31,74 @@ This project makes it possible to collect data from municipalities about off-str
 | Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes (paused in midnight) |
 
 ## Development
-<details>
-  <summary>Click to expand!</summary>
+
+This Python project is fully managed using the [Poetry][poetry] dependency
+manager.
+
+You need at least:
+
+- Python 3.10+
+- [Poetry][poetry-install]
+
 
 1. Create a `.env` file
 ```bash
 cp .env.example .env
 ```
-2. Change the `city` and `wait_time` (in minutes) in the **.env** file.
-3. Build docker image, type could be `parkandride` or `garages`
+
+2. Fillout the database credentials and which city you want to upload
+3. Change the `city` and `wait_time` (in minutes) in the **.env** file.
+4. Install all packages, including all development requirements:
+
 ```bash
-docker build -t nipkaart-[TYPE]-[CITY] .
+poetry install
 ```
-4. Deploy the stack
+
+Poetry creates by default an virtual environment where it installs all
+necessary pip packages, to enter or exit the venv run the following commands:
+
 ```bash
-docker stack deploy -c deploy/[CITY].yml offstreet
+poetry shell
+exit
 ```
 
-### Use of pre-commit
-
-This project provides the option to use pre-commit, so that each commit is checked for code review before being pushed through.
-
-Within your virtual environment you can use this command to install it:
+Setup the pre-commit check, you must run this inside the virtual environment:
 
 ```bash
 pre-commit install
 ```
 
-If you want to perform a full check in the meantime:
+*Now you're all set to get started!*
+
+As this repository uses the [pre-commit][pre-commit] framework, all changes
+are linted and tested with each commit. You can run all checks and tests
+manually, using the following command:
 
 ```bash
-pre-commit run --all-files
+poetry run pre-commit run --all-files
+```
+
+<details>
+  <summary>Click here to see more!</summary>
+
+### Build image
+
+Build docker image, type could be `parkandride` or `garages`
+
+```bash
+docker build -t nipkaart-[TYPE]-[CITY] .
+```
+
+### Run the image
+
+```bash
+docker run nipkaart-[TYPE]-[CITY] -d --restart on-failure --name nipkaart-[TYPE]-[CITY]
+```
+
+or
+
+```bash
+docker stack deploy -c deploy/[CITY].yml offstreet
 ```
 
 </details>
@@ -114,3 +151,7 @@ SOFTWARE.
 [last-commit-shield]: https://img.shields.io/github/last-commit/nipkaart/offstreet-parking.svg
 [linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml/badge.svg
 [linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yml
+
+[poetry-install]: https://python-poetry.org/docs/#installation
+[poetry]: https://python-poetry.org
+[pre-commit]: https://pre-commit.com
