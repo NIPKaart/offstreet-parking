@@ -25,7 +25,7 @@ hamburg = "^1.0.1"
 odp-amsterdam = "^5.1.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "23.3.0"
+black = "23.7.0"
 blacken-docs = "1.15.0"
 pre-commit = "3.3.3"
 pre-commit-hooks = "4.4.0"
