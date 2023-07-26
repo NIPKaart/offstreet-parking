@@ -46,7 +46,7 @@ class Municipality(City):
             data_set (list): List of garages.
             time (datetime): Current time.
         """
-        # purge_database(municipality, time)  # noqa: ERA001
+        # purge_database(self.name, time)  # noqa: ERA001
         print(f"{time} - {self.name}: START updating database with new data")
         try:
             connection.ping(reconnect=True)
