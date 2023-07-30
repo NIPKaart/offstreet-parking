@@ -65,21 +65,27 @@ if __name__ == "__main__":
         while True:
             LOCAL_ZONE = pytz.timezone("Europe/Amsterdam")
             CURRENT_TIME = datetime.now(tz=LOCAL_ZONE).strftime("%H:%M:%S")
+
             print(f"-------- START {selected_city} ---------")
 
-            # Get the data from the selected city
-            data_set = asyncio.run(provided_city.async_get_locations())
-
-            # Upload the data to the database
+            # Check if the city is in the list of cities
             if selected_city in ["hamburg"]:
                 local_time: datetime = datetime.now(tz=LOCAL_ZONE)
                 if local_time.hour >= 1:
+                    # Get the data from the selected city
+                    data_set = asyncio.run(provided_city.async_get_locations())
+                    # Upload the data to the database
                     provided_city.upload_data(data_set, CURRENT_TIME)
                 else:
                     print(
                         "Hamburg: Not updating database, time between 00:00 and 01:00.",
                     )
             else:
+                # Get the data from the selected city
+                data_set = asyncio.run(provided_city.async_get_locations())
+                # Upload the data to the database
                 provided_city.upload_data(data_set, CURRENT_TIME)
+
+            # Wait for the next update
             print(f"--------- DONE {selected_city} ---------")
             time.sleep(60 * WAIT_TIME)
