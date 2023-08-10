@@ -78,7 +78,7 @@ class Municipality(City):
                     "garage",
                     float(item.longitude),
                     float(item.latitude),
-                    bool(True),
+                    True,
                     datetime.datetime.now(tz=pytz.timezone("Europe/Amsterdam")),
                     datetime.datetime.now(tz=pytz.timezone("Europe/Amsterdam")),
                 )
