@@ -683,17 +683,18 @@ setuptools = "*"
 
 [[package]]
 name = "odp-amsterdam"
-version = "5.1.1"
+version = "5.3.0"
 description = "Asynchronous Python client providing Open Data information of Amsterdam"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "odp_amsterdam-5.1.1-py3-none-any.whl", hash = "sha256:da746f8a5dcef9fbf4c9ea701f8a9a3d7755354b8c790d99389bd40658e7d0e7"},
-    {file = "odp_amsterdam-5.1.1.tar.gz", hash = "sha256:862893f33eb2a945c032cc0382a1f611caeb6a0fa886eab979fada5e5302fc6e"},
+    {file = "odp_amsterdam-5.3.0-py3-none-any.whl", hash = "sha256:16270f4bc68a5600adbb1957ba64923d61580b8378b22194f662840c7df7d1ad"},
+    {file = "odp_amsterdam-5.3.0.tar.gz", hash = "sha256:91eefc9d20bfcd63c4b487e40c565befbb2d652f190e761b033fe8ba2da179c9"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.0.0"
+pytz = ">=2023.3,<2024.0"
 yarl = ">=1.6.0"
 
 [[package]]
