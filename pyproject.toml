@@ -22,7 +22,7 @@ pytz = "^2023.3"
 
 [tool.poetry.group.cities.dependencies]
 hamburg = "^3.0.0"
-odp-amsterdam = "^5.1.1"
+odp-amsterdam = "^6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.12.1"
