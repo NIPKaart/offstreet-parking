@@ -535,13 +535,13 @@ setuptools = "*"
 
 [[package]]
 name = "odp-amsterdam"
-version = "5.3.1"
+version = "6.0.0"
 description = "Asynchronous Python client providing Open Data information of Amsterdam"
 optional = false
-python-versions = ">=3.9,<4.0"
+python-versions = ">=3.11,<4.0"
 files = [
-    {file = "odp_amsterdam-5.3.1-py3-none-any.whl", hash = "sha256:31f19ec2550a22e3e7c7984bcb265586e5075044c5db7b36125beed5bae58d40"},
-    {file = "odp_amsterdam-5.3.1.tar.gz", hash = "sha256:b7ed96bb543122de6b03a87260c8a5e90082c195790659fe5c3729029ef8f5c1"},
+    {file = "odp_amsterdam-6.0.0-py3-none-any.whl", hash = "sha256:c9faeed68dcf06aa1759105a76c218194b9afcc316a08a6f806cb3a49a1433fe"},
+    {file = "odp_amsterdam-6.0.0.tar.gz", hash = "sha256:0093b2e21739487c453c2c343494f73334b2be090b1c336f720a5897546264e5"},
 ]
 
 [package.dependencies]
@@ -1018,4 +1018,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e6f48c8e638c03cee627bf83be5f3614712859d9723711b2212a2f043c524eec"
+content-hash = "54e11ef1c5d42a9e01df4f98fbfbb06a73fd2fee28358235251f5ced6603638f"
