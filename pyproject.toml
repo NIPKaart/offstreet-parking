@@ -21,7 +21,7 @@ python-dotenv = "^1.0.0"
 pytz = "^2023.3"
 
 [tool.poetry.group.cities.dependencies]
-hamburg = "^1.0.1"
+hamburg = "^3.0.0"
 odp-amsterdam = "^5.1.1"
 
 [tool.poetry.group.dev.dependencies]
