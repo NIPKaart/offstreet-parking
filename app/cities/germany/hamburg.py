@@ -24,17 +24,17 @@ class Municipality(City):
             geo_code="DE-HH",
             phone_code="040",
         )
-        self.bulk = "true"
+        self.limit = 40
 
     async def async_get_locations(self) -> ParkAndRide:
         """Get parking data from API.
 
         Args:
         ----
-            bulk (str): Get all data in one request.
+            limit (int): Number of garages to retrieve.
         """
         async with UDPHamburg() as client:
-            parking: ParkAndRide = await client.park_and_rides(bulk=self.bulk)
+            parking: ParkAndRide = await client.park_and_rides(limit=self.limit)
             print(f"{self.name} - data has been retrieved")
             return parking
 
