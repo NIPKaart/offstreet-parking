@@ -27,7 +27,7 @@ odp-amsterdam = "^6.0.0"
 [tool.poetry.group.dev.dependencies]
 black = "24.1.1"
 blacken-docs = "1.16.0"
-pre-commit = "3.6.0"
+pre-commit = "3.6.1"
 pre-commit-hooks = "4.5.0"
 pylint = "3.0.3"
 ruff = "0.1.14"
