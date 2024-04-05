@@ -1,4 +1,5 @@
 """Python script for Garages Amsterdam data."""
+
 import datetime
 
 import pymysql
@@ -30,6 +31,7 @@ class Municipality(City):
         Returns
         -------
             list: List of garages.
+
         """
         async with ODPAmsterdam() as client:
             garages: Garage = await client.all_garages()
@@ -43,6 +45,7 @@ class Municipality(City):
         ----
             data_set (list): List of garages.
             time (datetime): Current time.
+
         """
         # purge_database(self.name, time)  # noqa: ERA001
         print(f"{time} - {self.name}: START updating database with new data")
@@ -96,6 +99,7 @@ def check_value(value: int) -> int:
     Args:
     ----
         value (int): Value to check.
+
     """
     if value is None:
         return 0

@@ -7,6 +7,7 @@ def test_data(data_set: list) -> None:
     Args:
     ----
         data_set (list): List of data.
+
     """
     count: int
     for index, item in enumerate(data_set, 1):
@@ -26,6 +27,7 @@ def get_unique_number(lat: float, lon: float) -> int:
     Returns:
     -------
         int: The unique number.
+
     """
     try:
         lat_int = int(lat * 1e7)
