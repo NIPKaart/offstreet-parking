@@ -1,4 +1,5 @@
 """Setup database connection."""
+
 import datetime
 import os
 from pathlib import Path
@@ -48,6 +49,7 @@ def purge_database(municipality: str, time: datetime) -> None:
     ----
         municipality (str): Name of the municipality.
         time (datetime): Current time.
+
     """
     print(f"{time} - START met leeggooien van de database")
     try:

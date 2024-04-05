@@ -1,4 +1,5 @@
 """Upload tool for off-street parking into NIPKaart system."""
+
 import asyncio
 import os
 import time
@@ -31,6 +32,7 @@ class CityProvider:
         Returns:
         -------
             city_class (class): The class of the city.
+
         """
         match city_name:
             case "amsterdam":

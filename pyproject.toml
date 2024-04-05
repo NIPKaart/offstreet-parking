@@ -67,8 +67,9 @@ max-line-length = 88
 max-attributes = 20
 
 [tool.ruff]
-select = ["ALL"]
-ignore = [
+target-version = "py311"
+lint.select = ["ALL"]
+lint.ignore = [
   "ANN101", # Self... explanatory
   "ANN401", # Opinioated warning on disallowing dynamically typed expressions
   "D203", # Conflicts with other rules
@@ -76,9 +77,13 @@ ignore = [
   "D417", # False positives in some occasions
   "PLR2004", # Just annoying, not really useful
   "T201", # Allow the use of print()
+
+  # Conflicts with the Ruff formatter
+  "COM812",
+  "ISC001",
 ]
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 mark-parentheses = false
 fixture-parentheses = false
 

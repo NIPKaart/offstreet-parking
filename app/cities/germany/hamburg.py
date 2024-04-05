@@ -1,4 +1,5 @@
 """Python script for Park and Ride Hamburg data."""
+
 import datetime
 import json
 
@@ -32,6 +33,7 @@ class Municipality(City):
         Args:
         ----
             limit (int): Number of garages to retrieve.
+
         """
         async with UDPHamburg() as client:
             parking: ParkAndRide = await client.park_and_rides(limit=self.limit)
@@ -45,6 +47,7 @@ class Municipality(City):
         ----
             data_set (list): List of garages.
             time (datetime): Current time.
+
         """
         # purge_database(self.name, time)  # noqa: ERA001
         print(f"{time} - {self.name}: START updating database with new data")
