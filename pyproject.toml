@@ -18,7 +18,7 @@ packages = [
 pymysql = "^1.1.0"
 python = "^3.11"
 python-dotenv = "^1.0.0"
-pytz = "^2023.3"
+pytz = "^2024.1"
 
 [tool.poetry.group.cities.dependencies]
 hamburg = "^3.0.0"
