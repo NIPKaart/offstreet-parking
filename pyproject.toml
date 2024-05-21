@@ -15,7 +15,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-pymysql = "^1.1.0"
+pymysql = "^1.1.1"
 python = "^3.11"
 python-dotenv = "^1.0.0"
 pytz = "^2024.1"
