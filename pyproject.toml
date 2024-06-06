@@ -28,7 +28,7 @@ odp-amsterdam = "^6.0.0"
 pre-commit = "3.7.1"
 pre-commit-hooks = "4.6.0"
 pylint = "3.2.2"
-ruff = "0.4.7"
+ruff = "0.4.8"
 yamllint = "1.35.1"
 
 [tool.pylint.BASIC]
