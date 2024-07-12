@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "offstreet-parking"
-version = "0.1.0"
+package-mode = false
 description = "A tool to fetch and upload offstreet parking data to NIPKaart."
 authors = ["NIPKaart <hello@nipkaart.nl>"]
 maintainers = ["Klaas Schoute <hello@student-techlife.com>"]
