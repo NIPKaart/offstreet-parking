@@ -29,7 +29,7 @@ pre-commit = "3.8.0"
 pre-commit-hooks = "4.6.0"
 pylint = "3.3.6"
 ruff = "0.11.2"
-yamllint = "1.36.2"
+yamllint = "1.37.0"
 
 [tool.pylint.BASIC]
 good-names = [
