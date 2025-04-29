@@ -530,13 +530,13 @@ files = [
 
 [[package]]
 name = "odp-amsterdam"
-version = "6.0.2"
+version = "6.1.1"
 description = "Asynchronous Python client providing Open Data information of Amsterdam"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = ">=3.11"
 files = [
-    {file = "odp_amsterdam-6.0.2-py3-none-any.whl", hash = "sha256:3f41cd053566837f9236037cc2d5ffbaf7bcebe181dea72f144089fa59ca96f0"},
-    {file = "odp_amsterdam-6.0.2.tar.gz", hash = "sha256:9bfec38b0ddee09c096b2b4cfeb6d27b141de590dd1e0d22216195d170c02225"},
+    {file = "odp_amsterdam-6.1.1-py3-none-any.whl", hash = "sha256:42cbe475e6213eb0e0017bf0259e14340628cd010177c42eb94d6a15d2179c59"},
+    {file = "odp_amsterdam-6.1.1.tar.gz", hash = "sha256:f11eac2cba41034bdace315ff058de6d3821c4ec4dcaa4c806d18d3dfbf3b347"},
 ]
 
 [package.dependencies]
