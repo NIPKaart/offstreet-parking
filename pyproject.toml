@@ -22,7 +22,7 @@ pytz = "^2024.1"
 
 [tool.poetry.group.cities.dependencies]
 hamburg = "^3.0.0"
-odp-amsterdam = "^6.0.0"
+odp-amsterdam = "^7.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "3.8.0"
