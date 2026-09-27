@@ -378,18 +378,15 @@ wheels = [
 
 [[package]]
 name = "odp-amsterdam"
-version = "0.0.0"
-source = { url = "https://github.com/klaasnicolaas/python-odp-amsterdam/archive/aed3b0b276d7e296955f34f09e1395cd150444d5.tar.gz" }
+version = "7.0.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "yarl" },
 ]
-sdist = { hash = "sha256:6d654f6544c1a60921124c1db91dc722785e310a2a8c0dd1a6ab4095ebea1174" }
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp", specifier = ">=3.0.0" },
-    { name = "yarl", specifier = ">=1.6.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/2c/2b/3ed6e4ccbd3551195d345f2d41d059a28200868139d905bdac91dafe9fc5/odp_amsterdam-7.0.2.tar.gz", hash = "sha256:cee23a2d55b7de7660e13a1930832192b15599896baeab47dec0a47ed2b15c06", size = 11972, upload-time = "2026-09-27T23:58:31.156Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0c/09/592702a7595d99a409ff3b9854d32baec0f487ea8308b67be36a64777411/odp_amsterdam-7.0.2-py3-none-any.whl", hash = "sha256:e4ba6cfa234c96ba81a4887d101da78df1187051c11ab500f132f1fceab9e3d1", size = 14096, upload-time = "2026-09-27T23:58:29.836Z" },
 ]
 
 [[package]]
@@ -419,7 +416,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 [package.metadata.requires-dev]
 cities = [
     { name = "hamburg", specifier = ">=3.0.0,<4.0.0" },
-    { name = "odp-amsterdam", url = "https://github.com/klaasnicolaas/python-odp-amsterdam/archive/aed3b0b276d7e296955f34f09e1395cd150444d5.tar.gz" },
+    { name = "odp-amsterdam", specifier = ">=7.0.2,<7.1.0" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },

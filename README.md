@@ -36,7 +36,7 @@ uv run pre-commit run --all-files
 
 `main.py` still defaults to offline help. Its finite `--fetch amsterdam` and `--fetch hamburg` commands only print source counts and never write data. Hamburg is not a catalog source: its package cannot yet preserve missing live counts and the existing 40-record inspection limit does not prove completeness. No core API/database credentials or `.env` loading are involved in local export or tests.
 
-The Amsterdam package is temporarily pinned to immutable commit `aed3b0b276d7e296955f34f09e1395cd150444d5` from [package PR #1315](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1315), containing readable garage names, original `source_name` and current P+R classification. It also includes the released 7.0.1 coordinate and vehicle fixes. Replace this pin with a published release containing #1315 before merging the collector PR. Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
+The Amsterdam package requires release 7.0.2 or newer within the 7.0 line, containing readable garage names, original `source_name` and current P+R classification from [package PR #1315](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1315). It also includes the 7.0.1 coordinate and vehicle fixes. Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
 
 ## Local catalog export
 
