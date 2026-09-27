@@ -15,7 +15,7 @@ env:
 
 jobs:
   ruff:
-    name: Offline tests and Ruff
+    name: Ruff
     runs-on: ubuntu-latest
     steps:
       - name: ⤵️ Check out code from GitHub
@@ -29,10 +29,6 @@ jobs:
         run: uv sync --locked
       - name: Check lockfile consistency
         run: uv lock --check
-      - name: Run offline behavior tests
-        run: uv run python -m unittest discover -s tests -v
-      - name: Check safe local entrypoint
-        run: uv run python main.py --help
       - name: 🚀 Run Ruff linter
         run: uv run ruff check --output-format=github .
       - name: 🚀 Run Ruff formatter
