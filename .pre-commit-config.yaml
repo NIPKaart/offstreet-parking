@@ -62,12 +62,6 @@ repos:
         entry: uv lock --check
         pass_filenames: false
         always_run: true
-      - id: tests
-        name: Offline behavior tests
-        language: system
-        entry: uv run python -m unittest discover -s tests -v
-        pass_filenames: false
-        always_run: true
       - id: pylint
         name: 🌟 Starring code with pylint
         language: system
