@@ -18,7 +18,7 @@ Documentation = "https://github.com/nipkaart/offstreet-parking"
 [dependency-groups]
 cities = [
   "hamburg>=3.0.0,<4.0.0",
-  "odp-amsterdam @ https://github.com/klaasnicolaas/python-odp-amsterdam/archive/3760fb45bd11e4736bb225225f07a7dd2f852858.tar.gz",
+  "odp-amsterdam @ https://github.com/klaasnicolaas/python-odp-amsterdam/archive/aed3b0b276d7e296955f34f09e1395cd150444d5.tar.gz",
 ]
 dev = [
   "pre-commit==3.8.0",
