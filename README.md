@@ -21,63 +21,99 @@
 
 ## About
 
-Prepare offstreet source collection for [NIPKaart][nipkaart]. Existing source clients can be inspected locally; catalog mapping and delivery follow in #656.
+Prepare one complete Amsterdam car-garage/P+R catalog for [NIPKaart][nipkaart], independently of core. Issue [#656](https://github.com/NIPKaart/offstreet-parking/issues/656) delivers catalog metadata through private R2; [core#1250](https://github.com/NIPKaart/core/issues/1250) owns intake, review and publication. This revision implements only the collector. The format below is a collector-side contract candidate until verified with core; this does not close #656.
 
-## Existing source clients
+## Development and source inspection
 
-| Country | City | Type |
-| --- | --- | --- |
-| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides |
-
-## Development
-
-Use Python 3.14 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
+Use Python 3.14 and [uv](https://docs.astral.sh/uv/). Install and check the locked environment:
 
 ```bash
 uv sync --locked --python 3.14
 uv lock --check
-uv run python main.py --help
 uv run python -m unittest discover -s tests -v
 uv run pre-commit run --all-files
 ```
 
-No `.env`, core API credentials or database credentials are needed for installation, help or offline tests. Running `main.py` without arguments prints help and exits. Install local Git hooks with `uv run pre-commit install` if desired. CI runs the same offline tests, lockfile check, Ruff, Pylint, YAML and file checks.
+`main.py` still defaults to offline help. Its finite `--fetch amsterdam` and `--fetch hamburg` commands only print source counts and never write data. Hamburg is not a catalog source: its package cannot yet preserve missing live counts and the existing 40-record inspection limit does not prove completeness. No core API/database credentials or `.env` loading are involved in local export or tests.
 
-To inspect an existing source once (outbound provider access required):
+The Amsterdam package is temporarily pinned to an immutable source archive containing the coordinate-order and bicycle-prefix fixes in [package PR #1312](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1312). Replace that archive with a released package version once available. Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
+
+## Local catalog export
 
 ```bash
-uv run python main.py --fetch amsterdam
-uv run python main.py --fetch hamburg
+uv run python export.py --city amsterdam --output /tmp/offstreet-amsterdam.json
 ```
 
-These commands print only a record count and exit, without loading `.env`, connecting to MySQL, writing files or uploading data. Provider failures exit unsuccessfully. They are source smoke checks, not a catalog export or evidence that a source is complete or suitable for publication. Offline tests replace package clients and never contact live providers.
+The source is Amsterdam's [current garage availability feed](https://data.overheid.nl/dataset/9orkef6t-au29g), retrieved by `ODPAmsterdam.all_garages(vehicle="car")` from [the provider endpoint](https://p-info.vorin-amsterdam.nl/v1/ParkingLocation.json). The package reads one non-paginated response, excludes its named dummy/test facilities and selects cars. Facility category and vehicle type are package interpretations of source names, not verified accessibility claims. This is the complete car selection of that feed, not proof that every real Amsterdam garage is represented. A provider silently omitting a facility cannot be detected here; absence must remain a review decision in core.
 
-## Repository inventory and collector boundary
+One fetch has a 180-second deadline (the package also has a per-request timeout). Empty responses, duplicate/blank IDs, invalid names, invalid locations, invalid capacities or dates, more than 10,000 selected records and files over 32 MiB are rejected. Amsterdam coordinates must lie within latitude 52–53 and longitude 4–6; this guards against accidental axis reversal. Unknown capacity stays `null`; zero stays zero. A failed fetch or write leaves the previous output intact. The exporter fsyncs a temporary file and atomically renames it only after validation.
 
-| Area | Retained behavior and limitations |
+The `nipkaart-offstreet-catalog-1` envelope contains:
+
+| Field | Meaning |
 | --- | --- |
-| Entrypoint | `main.py` defaults to help and provides a finite `--fetch` command. The old continuous writer and polling schedule are removed. |
-| Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
-| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` retain their existing package calls. Hamburg requests at most 40 park-and-rides; completeness is unverified. Source objects are returned without legacy database mapping. |
-| Removed database coupling | Both `upload_data` methods previously upserted into MySQL `parking_offstreet`; importing `app.database` opened a connection. Those methods, the connection/delete helpers, coordinate-derived IDs, country/province database IDs and unknown-to-zero mapping are removed. |
-| Runtime and dependencies | Python 3.14 is the baseline for local development, CI and Docker; retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
-| Deployment definitions | The old Compose/Swarm definitions and credential template are removed. Docker now defaults to offline help. This revision does not update or stop any running deployment. |
+| `dataset` | `nl-amsterdam-garages`; identity namespace, independent of core database IDs |
+| `selection` | `car-garages-and-pr` |
+| `delivery_id` | New UUID for each successful collection; identical bytes/UUID reused for upload retries |
+| `retrieved_at` | UTC time immediately before fetching, for future core ordering checks |
+| `complete` | `true` only after the complete package selection has passed validation |
+| `source_count` | Number of unique records in this selected catalog |
+| `records` | Sorted by the original `external_id` |
 
-This follows [disabled-parking#779](https://github.com/NIPKaart/disabled-parking/pull/779) for tooling and [#780](https://github.com/NIPKaart/disabled-parking/pull/780) for removing the SQL runtime while preserving reusable source clients. NIPKaart source selection, mapping and future transport remain here. No shared framework is introduced.
+Each record contains exactly these fields (illustrative values):
 
-Catalog source verification, stable source IDs, capacity semantics, mapping examples, the bounded JSON delivery and private R2 transfer belong to #656 with NIPKaart/core#1250. No adapter, second transport format, core intake or live occupancy (#657) is implemented here. General free capacity does not establish accessible-space availability.
-
-## Container smoke check
-
-```bash
-docker build -t nipkaart-offstreet .
-docker run --rm --network none nipkaart-offstreet
-# Optional live source inspection:
-docker run --rm nipkaart-offstreet main.py --fetch amsterdam
+```json
+{
+  "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
+  "name": "P-106_ Byzantium (opendata)",
+  "facility_type": "garage",
+  "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
+  "capacity": {
+    "general_short_stay": 446,
+    "general_long_stay": null,
+    "accessible": null
+  },
+  "metadata_updated_at": null,
+  "source_observed_at": "2026-09-27T23:25:05Z"
+}
 ```
 
-The image is a source-inspection tool, not yet a scheduled producer. Do not replace existing production jobs with this revision: keep their existing image/revision until an explicit cutover is agreed. The previous SQL code and deployment definitions remain available in Git history; no legacy mode is carried in the new collector code, and no existing production process or data is modified by this preparation.
+`external_id` preserves the source `Id`, including case; a moved facility keeps that ID. `name` is the package-normalized name. `facility_type` is `garage` or `park_and_ride`. Coordinates are WGS84 **longitude, latitude**. Short/long-stay capacities are separate general counts: they are not added or inferred to be accessible. The feed does not provide accessible capacity, so it stays `null` even when general capacity is zero.
+
+`source_observed_at` preserves the package's source `PubDate` in UTC; it is an observation/publication timestamp and must not be treated as the modification date of catalog metadata. `metadata_updated_at` is unknown. A core metadata comparison should not treat a newer `source_observed_at` alone as a facility change. Free spaces, occupancy percentages, open/closed status and accessible availability are deliberately absent. Those observations belong to #657.
+
+## Private R2 delivery and scheduling
+
+Configure the environment from `.env.example` for a **dedicated private offstreet staging bucket**. Leave public access disabled. The collector requires an Object Read & Write token scoped only to that bucket; it reads an existing object after a conditional-create conflict to verify the exact bytes. The future core consumer must have a separate read-only identity. Standard R2 tokens are bucket-scoped, so the key prefix is an organization convention, not a permission boundary. See [R2 token permissions](https://developers.cloudflare.com/r2/api/tokens/).
+
+```bash
+# After setting R2_ENDPOINT, R2_BUCKET, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+uv run --env-file .env python collector.py --city amsterdam --directory /tmp/offstreet-deliveries
+```
+
+The finite collector persists `<directory>/nl-amsterdam-garages/pending.json` before upload and acquires a nonblocking per-dataset lock. Each completed delivery is one `PutObject` at `offstreet/nl-amsterdam-garages/<delivery_id>.json`, with `If-None-Match: *`, Content-MD5 and SHA-256 metadata. There is no separate manifest or partially visible multipart delivery. [R2 supports these conditional S3 operations](https://developers.cloudflare.com/r2/api/s3/api/).
+
+On a timeout or upload failure, retain `pending.json` and retry exactly that artifact before fetching again. An already-existing object is accepted only if its downloaded bytes match; a conflict leaves the pending file for diagnosis. Only acknowledged delivery moves it to `last.json`. Both renames are followed by directory fsync. Do not edit a pending file or delete the persistent volume to recover a failure. The collector never deletes remote objects or writes core data.
+
+The provided Compose configuration is opt-in and does not replace any existing deployment:
+
+```bash
+docker compose build
+# Start only against the separately configured staging bucket:
+docker compose up -d
+```
+
+One serial scheduler runs immediately, then every 86,400 seconds after success, with retries after at most 300 seconds and a 300-second child deadline. A shared-volume lock prevents overlapping schedulers. SIGTERM stops the child before exit. The volume retains pending/last files across restarts. The default catalog cadence is daily; no live occupancy polling is enabled. Keep staging objects until core has verified intake/replay; agree retention and lifecycle rules before unattended production operation rather than expiring unconsumed deliveries. Existing jobs and legacy data remain unchanged.
+
+## Validation evidence and remaining acceptance
+
+On 2026-09-28 (Europe/Amsterdam), the corrected package exported 47 car facilities with 47 unique source IDs. Coordinates ranged from latitude 52.3078–52.403327 and longitude 4.83811–4.969892532348648. All 47 accessible capacities remained unknown. The original 7.0.0 package failed location validation on the current latitude-first feed and classified `FP-` bicycle facilities as cars; the package fix covers current and historic axis orders and prefixes.
+
+All 28 collector tests and code checks passed locally. The Docker image built successfully, ran its help commands without network access and repeated the live export with the same 47 facility IDs and a new delivery UUID. The package has 65 passing tests, including public vehicle-filter checks.
+
+Offline tests cover small package-object mappings, source/size/completeness failures, stable IDs across exports, atomic output, immutable upload retries, conflicting bytes, scheduling, timeouts and shutdown. Botocore request validation substitutes for a live bucket in those tests. Passing tests or a local export do not prove R2 credentials, deployment or core compatibility.
+
+Still required with core#1250: approve the format revision; exercise actual private R2 upload/readback and scoped credentials; prove first intake and reimport, stable detail/favorite references, ordering/conflict rejection, missing-record review and authorized publication. Production activation, source publication rights/attribution confirmation, retention and any legacy handover remain separate acceptance decisions.
 
 ## Contributing
 

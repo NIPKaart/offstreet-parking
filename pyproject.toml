@@ -8,7 +8,7 @@ maintainers = [{ name = "Klaas Schoute", email = "hello@student-techlife.com" }]
 license = "MIT"
 readme = "README.md"
 keywords = ["offstreet", "parking", "nipkaart", "locations", "api"]
-dependencies = []
+dependencies = ["boto3>=1.40,<2"]
 
 [project.urls]
 Homepage = "https://github.com/nipkaart/offstreet-parking"
@@ -18,7 +18,7 @@ Documentation = "https://github.com/nipkaart/offstreet-parking"
 [dependency-groups]
 cities = [
   "hamburg>=3.0.0,<4.0.0",
-  "odp-amsterdam>=7.0.0,<7.1.0",
+  "odp-amsterdam @ https://github.com/klaasnicolaas/python-odp-amsterdam/archive/09be6a4c4ac276c573a2df3b3c7e838663bb6fc7.tar.gz",
 ]
 dev = [
   "pre-commit==3.8.0",
