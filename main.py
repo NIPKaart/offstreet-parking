@@ -3,7 +3,6 @@
 import argparse
 import asyncio
 
-from app.cities import City
 from app.cities.germany import hamburg
 from app.cities.netherlands import amsterdam
 
@@ -11,7 +10,9 @@ from app.cities.netherlands import amsterdam
 class CityProvider:
     """Select an existing source wrapper without opening a database connection."""
 
-    def provide_city(self, city_name: str) -> City:
+    def provide_city(
+        self, city_name: str
+    ) -> amsterdam.Municipality | hamburg.Municipality:
         """Return the selected city."""
         match city_name:
             case "amsterdam":

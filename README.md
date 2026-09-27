@@ -32,10 +32,10 @@ Prepare offstreet source collection for [NIPKaart][nipkaart]. Existing source cl
 
 ## Development
 
-Use Python 3.11 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. Python 3.11 remains supported by the existing source packages; there is no compatibility reason to raise that minimum here. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
+Use Python 3.14 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
 
 ```bash
-uv sync --locked --python 3.11
+uv sync --locked --python 3.14
 uv lock --check
 uv run python main.py --help
 uv run python -m unittest discover -s tests -v
@@ -61,7 +61,7 @@ These commands print only a record count and exit, without loading `.env`, conne
 | Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
 | NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` retain their existing package calls. Hamburg requests at most 40 park-and-rides; completeness is unverified. Source objects are returned without legacy database mapping. |
 | Removed database coupling | Both `upload_data` methods previously upserted into MySQL `parking_offstreet`; importing `app.database` opened a connection. Those methods, the connection/delete helpers, coordinate-derived IDs, country/province database IDs and unknown-to-zero mapping are removed. |
-| Runtime and dependencies | Python 3.11 and retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
+| Runtime and dependencies | Python 3.14 is the baseline for local development, CI and Docker; retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
 | Deployment definitions | The old Compose/Swarm definitions and credential template are removed. Docker now defaults to offline help. This revision does not update or stop any running deployment. |
 
 This follows [disabled-parking#779](https://github.com/NIPKaart/disabled-parking/pull/779) for tooling and [#780](https://github.com/NIPKaart/disabled-parking/pull/780) for removing the SQL runtime while preserving reusable source clients. NIPKaart source selection, mapping and future transport remain here. No shared framework is introduced.
