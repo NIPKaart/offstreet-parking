@@ -21,7 +21,7 @@
 
 ## About
 
-Prepare one complete Amsterdam car-garage/P+R catalog for [NIPKaart][nipkaart], independently of core. Issue [#656](https://github.com/NIPKaart/offstreet-parking/issues/656) delivers catalog metadata through private R2; [core#1250](https://github.com/NIPKaart/core/issues/1250) owns intake, review and publication. This revision implements only the collector. The format below is a collector-side contract candidate until verified with core; this does not close #656.
+Prepare one complete Amsterdam car-garage/P+R catalog for [NIPKaart][nipkaart], independently of core. Issue [#656](https://github.com/NIPKaart/offstreet-parking/issues/656) delivers catalog metadata through private R2; [core#1250](https://github.com/NIPKaart/core/issues/1250) owns intake, review and publication. This revision implements only the collector, including a separate local observation export for [#657](https://github.com/NIPKaart/offstreet-parking/issues/657). The format below is a collector-side contract candidate until verified with core; this does not close #656.
 
 ## Development and source inspection
 
@@ -36,7 +36,7 @@ uv run pre-commit run --all-files
 
 `main.py` still defaults to offline help. Its finite `--fetch amsterdam` and `--fetch hamburg` commands only print source counts and never write data. Hamburg is not a catalog source: its package cannot yet preserve missing live counts and the existing 40-record inspection limit does not prove completeness. No core API/database credentials or `.env` loading are involved in local export or tests.
 
-The Amsterdam package requires release 7.0.1 or newer within the 7.0 line, containing the coordinate-order and bicycle-prefix fixes in [package PR #1312](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1312). Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
+The Amsterdam package is temporarily pinned to immutable commit `33eef43b8cc04472e8a616c9c585787bd453140d` from [package PR #1315](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1315), containing readable garage names, original `source_name` and current P+R classification. It also includes the released 7.0.1 coordinate and vehicle fixes. Replace this pin with a published release containing #1315 before merging the collector PR. Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
 
 ## Local catalog export
 
@@ -65,10 +65,12 @@ Each record contains exactly these fields (illustrative values):
 ```json
 {
   "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
-  "name": "P-106_ Byzantium (opendata)",
+  "name": "Byzantium",
+  "source_name": "P-106_ Byzantium (opendata)",
   "facility_type": "garage",
   "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
   "capacity": {
+    "general_total": null,
     "general_short_stay": 446,
     "general_long_stay": null,
     "accessible": null
@@ -78,9 +80,39 @@ Each record contains exactly these fields (illustrative values):
 }
 ```
 
-`external_id` preserves the source `Id`, including case; a moved facility keeps that ID. `name` is the package-normalized name. `facility_type` is `garage` or `park_and_ride`. Coordinates are WGS84 **longitude, latitude**. Short/long-stay capacities are separate general counts: they are not added or inferred to be accessible. The feed does not provide accessible capacity, so it stays `null` even when general capacity is zero.
+`external_id` preserves the source `Id`, including case; a moved facility keeps that ID. `name` is the package-normalized display name; `source_name` preserves the original label. Technical prefixes and the trailing `(opendata)` label are removed, while meaningful numbers such as `P21` and `P4` and parentheses such as `(ACTA)` remain. `facility_type` is `garage` or `park_and_ride`. Coordinates are WGS84 **longitude, latitude**. Short/long-stay capacities are separate general counts: they are not added or inferred to be accessible. The source supplies no explicit reliable total and does not establish that the two categories are disjoint, so `general_total` stays `null`. For example, two category capacities of 110 must not silently become a claimed total of 220. The feed does not provide accessible capacity, so it stays `null` even when general capacity is zero.
 
-`source_observed_at` preserves the package's source `PubDate` in UTC; it is an observation/publication timestamp and must not be treated as the modification date of catalog metadata. `metadata_updated_at` is unknown. A core metadata comparison should not treat a newer `source_observed_at` alone as a facility change. Free spaces, occupancy percentages, open/closed status and accessible availability are deliberately absent. Those observations belong to #657.
+`source_observed_at` preserves the package's source `PubDate` in UTC; it is an observation/publication timestamp and must not be treated as the modification date of catalog metadata. `metadata_updated_at` is unknown. A core metadata comparison should not treat a newer `source_observed_at` alone as a facility change. Free spaces, occupancy percentages, open/closed status and accessible availability are deliberately absent. Those observations are available through the separate local export below.
+
+## Local live-observation export
+
+```bash
+uv run python export.py --city amsterdam --kind observations --max-age-seconds 300 --output /tmp/offstreet-amsterdam-live.json
+```
+
+This is a finite, manually invoked export for #657. The R2 collector and daily scheduler still accept only catalogs; this does not enable periodic live polling, upload or core intake.
+
+The `nipkaart-offstreet-observations-1` envelope contains `dataset`, `selection`, a new `delivery_id`, UTC retrieval-start `fetched_at`, `max_age_seconds`, `source_count` and records sorted by the same original `external_id` as the catalog. Join the two files on `dataset` and `external_id`. Observation absence never means deleting a facility.
+
+Example observation (illustrative counts):
+
+```json
+{
+  "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
+  "observed_at": "2026-09-27T23:49:05Z",
+  "valid_until": "2026-09-27T23:54:05Z",
+  "status": "current",
+  "source_state": "ok",
+  "capacity": {"general_total": null, "general_short_stay": 446, "general_long_stay": null, "accessible": null},
+  "availability": {"general_total": null, "general_short_stay": 391, "general_long_stay": null, "accessible": null}
+}
+```
+
+`capacity` holds source capacity; `availability` holds source free spaces. Both distinguish unknown (`null`) from zero. Totals remain unknown rather than summing unverified categories. General free spaces never imply free accessible spaces.
+
+`current` requires source state `ok` and a source timestamp at or before retrieval start, strictly less than the configured maximum age. Exactly at expiry the record is `stale`: counts remain dated historical observations, not current availability. A missing/future timestamp or non-`ok` source state is `unavailable` and suppresses free-space counts. `unavailable` describes unusable observation data, not a claim that the garage is closed. `valid_until` is computed from source time, never retrieval time; consumers must check this timestamp again when reading a file because an exported `current` label ages. The default five minutes is a configurable local-test policy, not an approved production cadence/freshness agreement.
+
+The export uses the same complete car selection, validation, fetch deadline, 10,000-record/32 MiB limits and atomic file completion as the catalog. Invalid or partial retrieval cannot replace the previous file. Names and coordinates belong to the catalog; live records carry source identity and dated counts only.
 
 ## Private R2 delivery and scheduling
 
@@ -109,7 +141,7 @@ One serial scheduler runs immediately, then every 86,400 seconds after success, 
 
 On 2026-09-28 (Europe/Amsterdam), the corrected package exported 47 car facilities with 47 unique source IDs. Coordinates ranged from latitude 52.3078–52.403327 and longitude 4.83811–4.969892532348648. All 47 accessible capacities remained unknown. The original 7.0.0 package failed location validation on the current latitude-first feed and classified `FP-` bicycle facilities as cars; the package fix covers current and historic axis orders and prefixes.
 
-All 28 collector tests and code checks passed locally. The Docker image built successfully, ran its help commands without network access and repeated the live export with the same 47 facility IDs and a new delivery UUID. The package has 65 passing tests, including public vehicle-filter checks.
+All 34 collector tests and code checks passed locally. A subsequent paired catalog/live export returned the same 47 source IDs, including 10 P+R facilities; the live snapshot held 44 current observations and three unavailable observations. The Docker image built successfully, ran its help commands without network access and repeated the live export with the same 47 facility IDs and a new delivery UUID. The naming package has 74 passing tests, including public vehicle-filter checks and current/legacy name cases.
 
 Offline tests cover small package-object mappings, source/size/completeness failures, stable IDs across exports, atomic output, immutable upload retries, conflicting bytes, scheduling, timeouts and shutdown. Botocore request validation substitutes for a live bucket in those tests. Passing tests or a local export do not prove R2 credentials, deployment or core compatibility.
 

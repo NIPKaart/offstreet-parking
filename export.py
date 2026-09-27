@@ -1,4 +1,4 @@
-"""Export offstreet accessible parking to a local file for core review."""
+"""Export an offstreet catalog or dated observations to a local file."""
 
 import argparse
 import asyncio
@@ -6,6 +6,7 @@ from pathlib import Path
 
 from app.datasets import DATASETS
 from app.export import export_dataset
+from app.observations import export_observations
 from app.records import SourceError
 
 
@@ -14,9 +15,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--city", required=True, choices=DATASETS)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--kind", choices=("catalog", "observations"), default="catalog"
+    )
+    parser.add_argument("--max-age-seconds", type=int, default=300)
     args = parser.parse_args()
     try:
-        count = asyncio.run(export_dataset(args.city, args.output))
+        if args.kind == "observations":
+            count = asyncio.run(
+                export_observations(args.city, args.output, args.max_age_seconds)
+            )
+        else:
+            count = asyncio.run(export_dataset(args.city, args.output))
     except (
         SourceError,
         OSError,
@@ -25,7 +35,7 @@ def main() -> None:
         KeyError,
     ) as error:
         parser.exit(1, f"Export failed: {error}\n")
-    print(f"Exported {count} records; complete source selection ready for core review.")
+    print(f"Exported {count} {args.kind} records to {args.output}.")
 
 
 if __name__ == "__main__":

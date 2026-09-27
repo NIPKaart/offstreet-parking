@@ -92,6 +92,12 @@ def write_records(
         "records": records,
     }
     validate_payload(payload, dataset)
+    write_payload(payload, output)
+    return len(records)
+
+
+def write_payload(payload: dict, output: Path) -> None:
+    """Share bounded atomic file completion across catalog and observation exports."""
     data = (json.dumps(payload, ensure_ascii=False, allow_nan=False) + "\n").encode()
     if len(data) > MAX_BYTES:
         msg = "Delivery exceeds the 32 MiB pilot limit"
@@ -112,7 +118,6 @@ def write_records(
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
-    return len(records)
 
 
 async def export_dataset(city: str, output: Path) -> int:

@@ -1,6 +1,7 @@
 """Python script for Garages Amsterdam data."""
 
 import math
+from datetime import datetime, timedelta
 
 from odp_amsterdam import Garage, ODPAmsterdam
 from odp_amsterdam.exceptions import ODPAmsterdamError
@@ -34,21 +35,29 @@ class Municipality(City):
 
     async def collect(self) -> Collection:
         """Select car facilities from the complete, non-paginated source feed."""
-        try:
-            async with ODPAmsterdam() as client:
-                garages = await client.all_garages(vehicle="car")
-        except (
-            ODPAmsterdamError,
-            TimeoutError,
-            ValueError,
-            TypeError,
-            KeyError,
-        ) as error:
-            message = "Amsterdam catalog retrieval failed"
-            raise SourceError(message) from error
+        garages = await fetch_car_garages()
         records = [catalog_record(garage) for garage in garages]
         records.sort(key=lambda record: record["external_id"])
         return Collection(records, len(records), 1, complete=True)
+
+    async def observe(self, fetched_at: datetime, max_age: int) -> Collection:
+        """Collect point-in-time capacity and availability separately from metadata."""
+        garages = await fetch_car_garages()
+        records = [
+            observation_record(garage, fetched_at, max_age) for garage in garages
+        ]
+        records.sort(key=lambda record: record["external_id"])
+        return Collection(records, len(records), 1, complete=True)
+
+
+async def fetch_car_garages() -> list[Garage]:
+    """Keep provider access and parsing in the universal package."""
+    try:
+        async with ODPAmsterdam() as client:
+            return await client.all_garages(vehicle="car")
+    except (ODPAmsterdamError, TimeoutError, ValueError, TypeError, KeyError) as error:
+        message = "Amsterdam source retrieval failed"
+        raise SourceError(message) from error
 
 
 def catalog_record(garage: Garage) -> dict[str, object]:
@@ -65,12 +74,14 @@ def catalog_record(garage: Garage) -> dict[str, object]:
     record = {
         "external_id": garage.garage_id,
         "name": garage.garage_name,
+        "source_name": garage.source_name or garage.garage_name,
         "facility_type": str(garage.category),
         "geometry": {
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
         "capacity": {
+            "general_total": None,
             "general_short_stay": capacity(garage.short_capacity),
             "general_long_stay": capacity(garage.long_capacity),
             "accessible": None,
@@ -80,3 +91,33 @@ def catalog_record(garage: Garage) -> dict[str, object]:
     }
     validate_record(record)
     return record
+
+
+def observation_record(
+    garage: Garage, fetched_at: datetime, max_age: int
+) -> dict[str, object]:
+    """Keep dated source counts distinct from facility and accessible availability."""
+    catalog = catalog_record(garage)
+    observed_at = garage.updated_at
+    valid_until = observed_at + timedelta(seconds=max_age) if observed_at else None
+    status = "unavailable"
+    if garage.state == "ok" and observed_at and observed_at <= fetched_at:
+        status = "current" if valid_until > fetched_at else "stale"
+    return {
+        "external_id": garage.garage_id,
+        "observed_at": timestamp(observed_at),
+        "valid_until": timestamp(valid_until),
+        "status": status,
+        "source_state": garage.state,
+        "capacity": catalog["capacity"],
+        "availability": {
+            "general_total": None,
+            "general_short_stay": capacity(garage.free_space_short)
+            if status != "unavailable"
+            else None,
+            "general_long_stay": capacity(garage.free_space_long)
+            if status != "unavailable"
+            else None,
+            "accessible": None,
+        },
+    }

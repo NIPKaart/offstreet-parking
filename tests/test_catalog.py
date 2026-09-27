@@ -27,6 +27,7 @@ def garage(**changes: object) -> Garage:
         Garage(
             garage_id="source-original-ID",
             garage_name="Example P+R",
+            source_name="PR-123_ Example P+R (opendata)",
             vehicle=VehicleType.CAR,
             category=GarageCategory.PARK_AND_RIDE,
             state="ok",
@@ -56,6 +57,7 @@ class CatalogTests(unittest.TestCase):
         result = record()
         self.assertEqual(result["external_id"], "source-original-ID")
         self.assertEqual(result["name"], "Example P+R")
+        self.assertEqual(result["source_name"], "PR-123_ Example P+R (opendata)")
         self.assertEqual(result["facility_type"], "park_and_ride")
         self.assertEqual(
             result["geometry"], {"type": "Point", "coordinates": [4.9, 52.37]}
@@ -63,6 +65,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(
             result["capacity"],
             {
+                "general_total": None,
                 "general_short_stay": 120,
                 "general_long_stay": None,
                 "accessible": None,

@@ -51,6 +51,7 @@ def validate_record(record: dict[str, Any]) -> None:
     if set(record) != {
         "external_id",
         "name",
+        "source_name",
         "facility_type",
         "geometry",
         "capacity",
@@ -59,7 +60,7 @@ def validate_record(record: dict[str, Any]) -> None:
     }:
         message = "Unexpected catalog fields"
         raise ValueError(message)
-    for field in ("external_id", "name"):
+    for field in ("external_id", "name", "source_name"):
         if not isinstance(record[field], str) or not record[field].strip():
             message = "Facility ID and name must be nonempty source strings"
             raise ValueError(message)
@@ -68,7 +69,12 @@ def validate_record(record: dict[str, Any]) -> None:
         raise ValueError(message)
     validate_geometry(record["geometry"])
     capacities = record["capacity"]
-    if set(capacities) != {"general_short_stay", "general_long_stay", "accessible"}:
+    if set(capacities) != {
+        "general_total",
+        "general_short_stay",
+        "general_long_stay",
+        "accessible",
+    }:
         message = "General and accessible capacities must stay separate"
         raise ValueError(message)
     for value in capacities.values():
