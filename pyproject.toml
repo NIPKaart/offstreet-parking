@@ -8,11 +8,7 @@ maintainers = [{ name = "Klaas Schoute", email = "hello@student-techlife.com" }]
 license = "MIT"
 readme = "README.md"
 keywords = ["offstreet", "parking", "nipkaart", "locations", "api"]
-dependencies = [
-  "pymysql>=1.1.0,<2.0.0",
-  "python-dotenv>=1.0.0,<2.0.0",
-  "pytz>=2024.1,<2025.0",
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/nipkaart/offstreet-parking"
@@ -54,7 +50,6 @@ good-names = [
 disable= [
   "too-few-public-methods",
   "too-many-arguments",
-  "too-many-positional-arguments", # Existing City metadata constructor
   "duplicate-code",
   "format",
   "unsubscriptable-object",

@@ -11,4 +11,4 @@ COPY . /app
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 ENTRYPOINT ["/app/.venv/bin/python"]
-CMD ["main.py", "--legacy"]
+CMD ["main.py", "--help"]

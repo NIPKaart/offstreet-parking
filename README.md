@@ -21,18 +21,18 @@
 
 ## About
 
-This project makes it possible to collect data from municipalities about off-street parking spaces (garages or park and rides) and upload them to the [NIPKaart][nipkaart] platform.
+Prepare offstreet source collection for [NIPKaart][nipkaart]. Existing source clients can be inspected locally; catalog mapping and delivery follow in #656.
 
-## Supported cities
+## Existing source clients
 
-| Country | City | Type | Update interval |
-|:--------|:-----|:-----|:----------------|
-| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes (paused in midnight) |
+| Country | City | Type |
+| --- | --- | --- |
+| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides |
 
 ## Development
 
-Use Python 3.11 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. Python 3.11 remains supported by the existing source packages; there is no compatibility reason to raise that minimum here. `uv.lock` replaces `poetry.lock`, preserving its package versions and dependency ranges. CI and Docker enforce the lockfile.
+Use Python 3.11 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. Python 3.11 remains supported by the existing source packages; there is no compatibility reason to raise that minimum here. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
 
 ```bash
 uv sync --locked --python 3.11
@@ -57,35 +57,27 @@ These commands print only a record count and exit, without loading `.env`, conne
 
 | Area | Retained behavior and limitations |
 | --- | --- |
-| Entrypoint | `main.py` provides safe help and a finite `--fetch` command; `--legacy` explicitly selects the existing continuous writer. |
+| Entrypoint | `main.py` defaults to help and provides a finite `--fetch` command. The old continuous writer and polling schedule are removed. |
 | Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
-| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` select package calls and hold legacy NIPKaart mapping. Hamburg currently requests at most 40 park-and-rides; completeness is unverified. |
-| Legacy identity and mapping | `City` holds old country/province IDs. `get_unique_number` derives an ID from coordinates; Amsterdam converts unknown counts to zero. Neither behavior is a future catalog contract. |
-| Direct database writes | Both `upload_data` methods upsert into the old MySQL `parking_offstreet` table. Importing `app.database` opens a connection; only explicit legacy writes load it. The module also contains a delete helper and a connection diagnostic, unused by the command. |
-| Runtime and dependencies | Python 3.11 and existing package versions are retained. Standard project metadata, `uv`, default `cities`/`dev` groups and locked installation follow disabled-parking#779, replacing deprecated Poetry metadata and a separate toolchain. Docker includes `uv.lock`, pins uv and uses Debian Bookworm instead of the obsolete Buster base. `.env` and local virtual environments are excluded from the image. |
-| Existing deployment | Docker still defaults to `main.py --legacy`; `docker-compose.yml` and `deploy/*.yml` remain legacy deployment definitions. No running jobs or data are changed by this preparation. |
+| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` retain their existing package calls. Hamburg requests at most 40 park-and-rides; completeness is unverified. Source objects are returned without legacy database mapping. |
+| Removed database coupling | Both `upload_data` methods previously upserted into MySQL `parking_offstreet`; importing `app.database` opened a connection. Those methods, the connection/delete helpers, coordinate-derived IDs, country/province database IDs and unknown-to-zero mapping are removed. |
+| Runtime and dependencies | Python 3.11 and retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
+| Deployment definitions | The old Compose/Swarm definitions and credential template are removed. Docker now defaults to offline help. This revision does not update or stop any running deployment. |
 
-The reusable boundary is the universal source clients and their returned objects. NIPKaart source selection, mapping and future transport remain in this repository, following the municipal collector's finite-command and offline-test approach without introducing a shared framework. The old MySQL schema, coordinate-derived IDs, unknown-to-zero mapping and polling loop must not become the new collector contract. Existing SQL behavior is retained, including its limitations, rather than migrated to core's PostgreSQL schema.
+This follows [disabled-parking#779](https://github.com/NIPKaart/disabled-parking/pull/779) for tooling and [#780](https://github.com/NIPKaart/disabled-parking/pull/780) for removing the SQL runtime while preserving reusable source clients. NIPKaart source selection, mapping and future transport remain here. No shared framework is introduced.
 
 Catalog source verification, stable source IDs, capacity semantics, mapping examples, the bounded JSON delivery and private R2 transfer belong to #656 with NIPKaart/core#1250. No adapter, second transport format, core intake or live occupancy (#657) is implemented here. General free capacity does not establish accessible-space availability.
 
-## Legacy operation
-
-Only legacy operation needs the variables in `.env.example`. Set `CITY` to `amsterdam` or `hamburg`, `WAIT_TIME` to a positive number of minutes and supply the old MySQL credentials. Settings are loaded after command parsing and before validation.
-
-```bash
-uv run python main.py --legacy
-```
-
-Existing shell jobs that invoke `python main.py` directly must explicitly add `--legacy` when adopting this revision. Container defaults preserve the writer, but credentials must now be supplied at runtime rather than baked into the image. Do not deploy or stop existing jobs as part of repository preparation.
+## Container smoke check
 
 ```bash
 docker build -t nipkaart-offstreet .
-# Safe offline check; overrides the image's legacy command:
-docker run --rm nipkaart-offstreet main.py --help
-# Explicit legacy operation against the old database:
-docker run --env-file .env --name nipkaart-offstreet nipkaart-offstreet
+docker run --rm --network none nipkaart-offstreet
+# Optional live source inspection:
+docker run --rm nipkaart-offstreet main.py --fetch amsterdam
 ```
+
+The image is a source-inspection tool, not yet a scheduled producer. Do not replace existing production jobs with this revision: keep their existing image/revision until an explicit cutover is agreed. The previous SQL code and deployment definitions remain available in Git history; no legacy mode is carried in the new collector code, and no existing production process or data is modified by this preparation.
 
 ## Contributing
 
