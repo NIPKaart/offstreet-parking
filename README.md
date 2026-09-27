@@ -36,7 +36,7 @@ uv run pre-commit run --all-files
 
 `main.py` still defaults to offline help. Its finite `--fetch amsterdam` and `--fetch hamburg` commands only print source counts and never write data. Hamburg is not a catalog source: its package cannot yet preserve missing live counts and the existing 40-record inspection limit does not prove completeness. No core API/database credentials or `.env` loading are involved in local export or tests.
 
-The Amsterdam package is temporarily pinned to an immutable source archive containing the coordinate-order and bicycle-prefix fixes in [package PR #1312](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1312). Replace that archive with a released package version once available. Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
+The Amsterdam package requires release 7.0.1 or newer within the 7.0 line, containing the coordinate-order and bicycle-prefix fixes in [package PR #1312](https://github.com/klaasnicolaas/python-odp-amsterdam/pull/1312). Source HTTP/parsing remains in the universal package; the collector only selects car facilities and maps NIPKaart records. Boto3 uses the same S3 transport as the municipal collector.
 
 ## Local catalog export
 
