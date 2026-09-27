@@ -46,9 +46,9 @@ def upload(
             Key=key,
             Body=data,
             ContentType="application/json",
-            ContentMD5=base64.b64encode(
-                hashlib.md5(data, usedforsecurity=False).digest(),
-            ).decode("ascii"),
+            ChecksumSHA256=base64.b64encode(hashlib.sha256(data).digest()).decode(
+                "ascii"
+            ),
             Metadata={"sha256": digest},
             IfNoneMatch="*",
         )

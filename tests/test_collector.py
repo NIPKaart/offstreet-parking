@@ -55,8 +55,8 @@ class CollectorTests(unittest.TestCase):
             "Key": self.key,
             "Body": self.data,
             "ContentType": "application/json",
-            "ContentMD5": base64.b64encode(
-                hashlib.md5(self.data, usedforsecurity=False).digest()
+            "ChecksumSHA256": base64.b64encode(
+                hashlib.sha256(self.data).digest()
             ).decode("ascii"),
             "Metadata": {"sha256": hashlib.sha256(self.data).hexdigest()},
             "IfNoneMatch": "*",

@@ -91,7 +91,7 @@ Configure the environment from `.env.example` for a **dedicated private offstree
 uv run --env-file .env python collector.py --city amsterdam --directory /tmp/offstreet-deliveries
 ```
 
-The finite collector persists `<directory>/nl-amsterdam-garages/pending.json` before upload and acquires a nonblocking per-dataset lock. Each completed delivery is one `PutObject` at `offstreet/nl-amsterdam-garages/<delivery_id>.json`, with `If-None-Match: *`, Content-MD5 and SHA-256 metadata. There is no separate manifest or partially visible multipart delivery. [R2 supports these conditional S3 operations](https://developers.cloudflare.com/r2/api/s3/api/).
+The finite collector persists `<directory>/nl-amsterdam-garages/pending.json` before upload and acquires a nonblocking per-dataset lock. Each completed delivery is one `PutObject` at `offstreet/nl-amsterdam-garages/<delivery_id>.json`, with `If-None-Match: *`, a SHA-256 request checksum and SHA-256 metadata. There is no separate manifest or partially visible multipart delivery. R2 supports [conditional S3 operations](https://developers.cloudflare.com/r2/api/s3/api/) and [SHA-256 PutObject checksums](https://developers.cloudflare.com/r2/platform/release-notes/#2023-06-16).
 
 On a timeout or upload failure, retain `pending.json` and retry exactly that artifact before fetching again. An already-existing object is accepted only if its downloaded bytes match; a conflict leaves the pending file for diagnosis. Only acknowledged delivery moves it to `last.json`. Both renames are followed by directory fsync. Do not edit a pending file or delete the persistent volume to recover a failure. The collector never deletes remote objects or writes core data.
 
