@@ -21,87 +21,63 @@
 
 ## About
 
-This project makes it possible to collect data from municipalities about off-street parking spaces (garages or park and rides) and upload them to the [NIPKaart][nipkaart] platform.
+Prepare offstreet source collection for [NIPKaart][nipkaart]. Existing source clients can be inspected locally; catalog mapping and delivery follow in #656.
 
-## Supported cities
+## Existing source clients
 
-| Country | City | Type | Update interval |
-|:--------|:-----|:-----|:----------------|
-| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages | Every 10 minutes |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides | Every 30 minutes (paused in midnight) |
+| Country | City | Type |
+| --- | --- | --- |
+| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
+| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides |
 
 ## Development
 
-This Python project is fully managed using the [Poetry][poetry] dependency
-manager.
-
-You need at least:
-
-- Python 3.11+
-- [Poetry][poetry-install]
-
-
-1. Create a `.env` file
-```bash
-cp .env.example .env
-```
-
-2. Fillout the database credentials and which city you want to upload
-3. Change the `city` and `wait_time` (in minutes) in the **.env** file.
-4. Install all packages, including all development requirements:
+Use Python 3.14 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
 
 ```bash
-poetry install
+uv sync --locked --python 3.14
+uv lock --check
+uv run python main.py --help
+uv run python -m unittest discover -s tests -v
+uv run pre-commit run --all-files
 ```
 
-Poetry creates by default an virtual environment where it installs all
-necessary pip packages, to enter or exit the venv run the following commands:
+No `.env`, core API credentials or database credentials are needed for installation, help or offline tests. Running `main.py` without arguments prints help and exits. Install local Git hooks with `uv run pre-commit install` if desired. CI runs the same offline tests, lockfile check, Ruff, Pylint, YAML and file checks.
+
+To inspect an existing source once (outbound provider access required):
 
 ```bash
-poetry shell
-exit
+uv run python main.py --fetch amsterdam
+uv run python main.py --fetch hamburg
 ```
 
-Setup the pre-commit check, you must run this inside the virtual environment:
+These commands print only a record count and exit, without loading `.env`, connecting to MySQL, writing files or uploading data. Provider failures exit unsuccessfully. They are source smoke checks, not a catalog export or evidence that a source is complete or suitable for publication. Offline tests replace package clients and never contact live providers.
+
+## Repository inventory and collector boundary
+
+| Area | Retained behavior and limitations |
+| --- | --- |
+| Entrypoint | `main.py` defaults to help and provides a finite `--fetch` command. The old continuous writer and polling schedule are removed. |
+| Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
+| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` retain their existing package calls. Hamburg requests at most 40 park-and-rides; completeness is unverified. Source objects are returned without legacy database mapping. |
+| Removed database coupling | Both `upload_data` methods previously upserted into MySQL `parking_offstreet`; importing `app.database` opened a connection. Those methods, the connection/delete helpers, coordinate-derived IDs, country/province database IDs and unknown-to-zero mapping are removed. |
+| Runtime and dependencies | Python 3.14 is the baseline for local development, CI and Docker; retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
+| Deployment definitions | The old Compose/Swarm definitions and credential template are removed. Docker now defaults to offline help. This revision does not update or stop any running deployment. |
+
+This follows [disabled-parking#779](https://github.com/NIPKaart/disabled-parking/pull/779) for tooling and [#780](https://github.com/NIPKaart/disabled-parking/pull/780) for removing the SQL runtime while preserving reusable source clients. NIPKaart source selection, mapping and future transport remain here. No shared framework is introduced.
+
+Catalog source verification, stable source IDs, capacity semantics, mapping examples, the bounded JSON delivery and private R2 transfer belong to #656 with NIPKaart/core#1250. No adapter, second transport format, core intake or live occupancy (#657) is implemented here. General free capacity does not establish accessible-space availability.
+
+## Container smoke check
 
 ```bash
-pre-commit install
+docker build -t nipkaart-offstreet .
+docker run --rm --network none nipkaart-offstreet
+# Optional live source inspection:
+docker run --rm nipkaart-offstreet main.py --fetch amsterdam
 ```
 
-*Now you're all set to get started!*
-
-As this repository uses the [pre-commit][pre-commit] framework, all changes
-are linted and tested with each commit. You can run all checks and tests
-manually, using the following command:
-
-```bash
-poetry run pre-commit run --all-files
-```
-
-<details>
-  <summary>Click here to see more!</summary>
-
-### Build image
-
-Build docker image, type could be `parkandride` or `garages`
-
-```bash
-docker build -t nipkaart-[TYPE]-[CITY] .
-```
-
-### Run the image
-
-```bash
-docker run nipkaart-[TYPE]-[CITY] -d --restart on-failure --name nipkaart-[TYPE]-[CITY]
-```
-
-or
-
-```bash
-docker stack deploy -c deploy/[CITY].yml offstreet
-```
-
-</details>
+The image is a source-inspection tool, not yet a scheduled producer. Do not replace existing production jobs with this revision: keep their existing image/revision until an explicit cutover is agreed. The previous SQL code and deployment definitions remain available in Git history; no legacy mode is carried in the new collector code, and no existing production process or data is modified by this preparation.
 
 ## Contributing
 
@@ -152,6 +128,4 @@ SOFTWARE.
 [linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml/badge.svg
 [linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml
 
-[poetry-install]: https://python-poetry.org/docs/#installation
-[poetry]: https://python-poetry.org
 [pre-commit]: https://pre-commit.com

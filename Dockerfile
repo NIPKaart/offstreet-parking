@@ -1,14 +1,14 @@
-# BASE IMAGE
-FROM python:3.11-slim-buster
+FROM python:3.14-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /uvx /bin/
 LABEL Maintainer="Klaas Schoute"
 
-COPY . /app
 WORKDIR /app
+ENV UV_PYTHON_DOWNLOADS=never
 
-# Install poetry and dependencies
-RUN pip install poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --with cities --without dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-cache
+COPY . /app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-ENTRYPOINT ["python"]
-CMD ["main.py"]
+ENTRYPOINT ["/app/.venv/bin/python"]
+CMD ["main.py", "--help"]

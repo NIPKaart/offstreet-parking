@@ -7,4 +7,9 @@ __pycache__
 
 # Files
 .python-version
-poetry.lock
+
+.venv
+.git
+.env
+.env.*
+tests

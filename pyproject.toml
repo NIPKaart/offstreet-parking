@@ -1,35 +1,36 @@
-[tool.poetry]
+[project]
 name = "offstreet-parking"
-package-mode = false
-description = "A tool to fetch and upload offstreet parking data to NIPKaart."
-authors = ["NIPKaart <hello@nipkaart.nl>"]
-maintainers = ["Klaas Schoute <hello@student-techlife.com>"]
+version = "0.0.0"
+description = "A tool to fetch offstreet parking data for NIPKaart."
+requires-python = ">=3.14,<4.0"
+authors = [{ name = "NIPKaart", email = "hello@nipkaart.nl" }]
+maintainers = [{ name = "Klaas Schoute", email = "hello@student-techlife.com" }]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/nipkaart/offstreet-parking"
-repository = "https://github.com/nipkaart/offstreet-parking"
-documentation = "https://github.com/nipkaart/offstreet-parking"
 keywords = ["offstreet", "parking", "nipkaart", "locations", "api"]
-packages = [
-  { include = "app" },
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/nipkaart/offstreet-parking"
+Repository = "https://github.com/nipkaart/offstreet-parking"
+Documentation = "https://github.com/nipkaart/offstreet-parking"
+
+[dependency-groups]
+cities = [
+  "hamburg>=3.0.0,<4.0.0",
+  "odp-amsterdam>=6.0.0,<7.0.0",
+]
+dev = [
+  "pre-commit==3.8.0",
+  "pre-commit-hooks==4.6.0",
+  "pylint==3.3.9",
+  "ruff==0.16.7",
+  "yamllint==1.38.0",
 ]
 
-[tool.poetry.dependencies]
-pymysql = "^1.1.0"
-python = "^3.11"
-python-dotenv = "^1.0.0"
-pytz = "^2024.1"
-
-[tool.poetry.group.cities.dependencies]
-hamburg = "^3.0.0"
-odp-amsterdam = "^6.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pre-commit = "3.8.0"
-pre-commit-hooks = "4.6.0"
-pylint = "3.3.9"
-ruff = "0.16.7"
-yamllint = "1.38.0"
+[tool.uv]
+package = false
+default-groups = ["cities", "dev"]
 
 [tool.pylint.BASIC]
 good-names = [
@@ -65,10 +66,10 @@ max-line-length = 88
 max-attributes = 20
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py314"
 lint.select = ["ALL"]
 lint.ignore = [
-  "ANN101", # Self... explanatory
+  "CPY001", # Copyright is documented in LICENSE
   "ANN401", # Opinioated warning on disallowing dynamically typed expressions
   "D203", # Conflicts with other rules
   "D213", # Conflicts with other rules
@@ -81,10 +82,9 @@ lint.ignore = [
   "ISC001",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["PT009", "PT027"] # Standard-library unittest, no pytest dependency
+
 [tool.ruff.lint.flake8-pytest-style]
 mark-parentheses = false
 fixture-parentheses = false
-
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
