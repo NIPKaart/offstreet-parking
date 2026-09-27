@@ -4,7 +4,7 @@
 class City:
     """General class for cities."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         name: str,
         country: str,

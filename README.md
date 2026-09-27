@@ -32,76 +32,60 @@ This project makes it possible to collect data from municipalities about off-str
 
 ## Development
 
-This Python project is fully managed using the [Poetry][poetry] dependency
-manager.
-
-You need at least:
-
-- Python 3.11+
-- [Poetry][poetry-install]
-
-
-1. Create a `.env` file
-```bash
-cp .env.example .env
-```
-
-2. Fillout the database credentials and which city you want to upload
-3. Change the `city` and `wait_time` (in minutes) in the **.env** file.
-4. Install all packages, including all development requirements:
+Use Python 3.11 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. Python 3.11 remains supported by the existing source packages; there is no compatibility reason to raise that minimum here. `uv.lock` replaces `poetry.lock`, preserving its package versions and dependency ranges. CI and Docker enforce the lockfile.
 
 ```bash
-poetry install
+uv sync --locked --python 3.11
+uv lock --check
+uv run python main.py --help
+uv run python -m unittest discover -s tests -v
+uv run pre-commit run --all-files
 ```
 
-Poetry creates by default an virtual environment where it installs all
-necessary pip packages, to enter or exit the venv run the following commands:
+No `.env`, core API credentials or database credentials are needed for installation, help or offline tests. Running `main.py` without arguments prints help and exits. Install local Git hooks with `uv run pre-commit install` if desired. CI runs the same offline tests, lockfile check, Ruff, Pylint, YAML and file checks.
+
+To inspect an existing source once (outbound provider access required):
 
 ```bash
-poetry shell
-exit
+uv run python main.py --fetch amsterdam
+uv run python main.py --fetch hamburg
 ```
 
-Setup the pre-commit check, you must run this inside the virtual environment:
+These commands print only a record count and exit, without loading `.env`, connecting to MySQL, writing files or uploading data. Provider failures exit unsuccessfully. They are source smoke checks, not a catalog export or evidence that a source is complete or suitable for publication. Offline tests replace package clients and never contact live providers.
+
+## Repository inventory and collector boundary
+
+| Area | Retained behavior and limitations |
+| --- | --- |
+| Entrypoint | `main.py` provides safe help and a finite `--fetch` command; `--legacy` explicitly selects the existing continuous writer. |
+| Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
+| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` select package calls and hold legacy NIPKaart mapping. Hamburg currently requests at most 40 park-and-rides; completeness is unverified. |
+| Legacy identity and mapping | `City` holds old country/province IDs. `get_unique_number` derives an ID from coordinates; Amsterdam converts unknown counts to zero. Neither behavior is a future catalog contract. |
+| Direct database writes | Both `upload_data` methods upsert into the old MySQL `parking_offstreet` table. Importing `app.database` opens a connection; only explicit legacy writes load it. The module also contains a delete helper and a connection diagnostic, unused by the command. |
+| Runtime and dependencies | Python 3.11 and existing package versions are retained. Standard project metadata, `uv`, default `cities`/`dev` groups and locked installation follow disabled-parking#779, replacing deprecated Poetry metadata and a separate toolchain. Docker includes `uv.lock`, pins uv and uses Debian Bookworm instead of the obsolete Buster base. `.env` and local virtual environments are excluded from the image. |
+| Existing deployment | Docker still defaults to `main.py --legacy`; `docker-compose.yml` and `deploy/*.yml` remain legacy deployment definitions. No running jobs or data are changed by this preparation. |
+
+The reusable boundary is the universal source clients and their returned objects. NIPKaart source selection, mapping and future transport remain in this repository, following the municipal collector's finite-command and offline-test approach without introducing a shared framework. The old MySQL schema, coordinate-derived IDs, unknown-to-zero mapping and polling loop must not become the new collector contract. Existing SQL behavior is retained, including its limitations, rather than migrated to core's PostgreSQL schema.
+
+Catalog source verification, stable source IDs, capacity semantics, mapping examples, the bounded JSON delivery and private R2 transfer belong to #656 with NIPKaart/core#1250. No adapter, second transport format, core intake or live occupancy (#657) is implemented here. General free capacity does not establish accessible-space availability.
+
+## Legacy operation
+
+Only legacy operation needs the variables in `.env.example`. Set `CITY` to `amsterdam` or `hamburg`, `WAIT_TIME` to a positive number of minutes and supply the old MySQL credentials. Settings are loaded after command parsing and before validation.
 
 ```bash
-pre-commit install
+uv run python main.py --legacy
 ```
 
-*Now you're all set to get started!*
-
-As this repository uses the [pre-commit][pre-commit] framework, all changes
-are linted and tested with each commit. You can run all checks and tests
-manually, using the following command:
+Existing shell jobs that invoke `python main.py` directly must explicitly add `--legacy` when adopting this revision. Container defaults preserve the writer, but credentials must now be supplied at runtime rather than baked into the image. Do not deploy or stop existing jobs as part of repository preparation.
 
 ```bash
-poetry run pre-commit run --all-files
+docker build -t nipkaart-offstreet .
+# Safe offline check; overrides the image's legacy command:
+docker run --rm nipkaart-offstreet main.py --help
+# Explicit legacy operation against the old database:
+docker run --env-file .env --name nipkaart-offstreet nipkaart-offstreet
 ```
-
-<details>
-  <summary>Click here to see more!</summary>
-
-### Build image
-
-Build docker image, type could be `parkandride` or `garages`
-
-```bash
-docker build -t nipkaart-[TYPE]-[CITY] .
-```
-
-### Run the image
-
-```bash
-docker run nipkaart-[TYPE]-[CITY] -d --restart on-failure --name nipkaart-[TYPE]-[CITY]
-```
-
-or
-
-```bash
-docker stack deploy -c deploy/[CITY].yml offstreet
-```
-
-</details>
 
 ## Contributing
 
@@ -152,6 +136,4 @@ SOFTWARE.
 [linting-shield]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml/badge.svg
 [linting-url]: https://github.com/NIPKaart/offstreet-parking/actions/workflows/linting.yaml
 
-[poetry-install]: https://python-poetry.org/docs/#installation
-[poetry]: https://python-poetry.org
 [pre-commit]: https://pre-commit.com

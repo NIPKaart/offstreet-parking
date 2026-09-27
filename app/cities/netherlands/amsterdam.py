@@ -7,7 +7,6 @@ import pytz
 from odp_amsterdam import Garage, ODPAmsterdam
 
 from app.cities import City
-from app.database import connection, cursor
 from app.helpers import get_unique_number
 
 
@@ -25,7 +24,7 @@ class Municipality(City):
             phone_code="020",
         )
 
-    async def async_get_locations(self) -> Garage:
+    async def async_get_locations(self) -> list[Garage]:
         """Get garage data from API.
 
         Returns
@@ -34,7 +33,7 @@ class Municipality(City):
 
         """
         async with ODPAmsterdam() as client:
-            garages: Garage = await client.all_garages()
+            garages: list[Garage] = await client.all_garages()
             print(f"{self.name} - data has been retrieved")
             return garages
 
@@ -47,6 +46,10 @@ class Municipality(City):
             time (datetime): Current time.
 
         """
+        # Delay the legacy connection until an explicit write is requested.
+        # pylint: disable=import-outside-toplevel
+        from app.database import connection, cursor  # noqa: PLC0415
+
         # purge_database(self.name, time)  # noqa: ERA001
         print(f"{time} - {self.name}: START updating database with new data")
         try:

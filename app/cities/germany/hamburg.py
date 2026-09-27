@@ -8,7 +8,6 @@ import pytz
 from hamburg import ParkAndRide, UDPHamburg
 
 from app.cities import City
-from app.database import connection, cursor
 from app.helpers import get_unique_number
 
 
@@ -27,7 +26,7 @@ class Municipality(City):
         )
         self.limit = 40
 
-    async def async_get_locations(self) -> ParkAndRide:
+    async def async_get_locations(self) -> list[ParkAndRide]:
         """Get parking data from API.
 
         Args:
@@ -36,7 +35,7 @@ class Municipality(City):
 
         """
         async with UDPHamburg() as client:
-            parking: ParkAndRide = await client.park_and_rides(limit=self.limit)
+            parking: list[ParkAndRide] = await client.park_and_rides(limit=self.limit)
             print(f"{self.name} - data has been retrieved")
             return parking
 
@@ -49,6 +48,10 @@ class Municipality(City):
             time (datetime): Current time.
 
         """
+        # Delay the legacy connection until an explicit write is requested.
+        # pylint: disable=import-outside-toplevel
+        from app.database import connection, cursor  # noqa: PLC0415
+
         # purge_database(self.name, time)  # noqa: ERA001
         print(f"{time} - {self.name}: START updating database with new data")
         try:
