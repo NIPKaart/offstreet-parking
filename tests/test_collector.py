@@ -18,6 +18,7 @@ from botocore.response import StreamingBody
 from botocore.stub import Stubber
 
 from app.cities.netherlands.amsterdam import observation_record
+from app.datasets import DATASETS
 from app.export import encode
 from collector import deliver_observations, run_once, upload
 from tests.test_catalog import garage, record
@@ -41,8 +42,9 @@ class CollectorTests(unittest.TestCase):
                 {
                     "dataset": DATASET,
                     "delivery_id": str(uuid4()),
-                    "format": "nipkaart-offstreet-catalog-1",
+                    "format": "nipkaart-offstreet-catalog-2",
                     "selection": "car-garages-and-pr",
+                    "source": DATASETS["amsterdam"].description.as_dict(),
                     "complete": True,
                     "source_count": 1,
                     "retrieved_at": "2026-09-28T00:00:00Z",

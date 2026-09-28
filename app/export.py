@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from app.datasets import Dataset
     from app.records import Collection
 
+FORMAT = "nipkaart-offstreet-catalog-2"
 MAX_RECORDS = 10000
 MAX_BYTES = 32 * 1024 * 1024
 FETCH_TIMEOUT = 180
@@ -26,8 +27,9 @@ FETCH_TIMEOUT = 180
 def validate_payload(payload: dict, dataset: Dataset) -> None:
     """Reject mismatched, incomplete or corrupt files before creating an object."""
     if (
-        payload["format"] != "nipkaart-offstreet-catalog-1"
+        payload["format"] != FORMAT
         or payload["dataset"] != dataset.code
+        or payload.get("source") != dataset.description.as_dict()
         or payload["selection"] != dataset.selection
         or payload["complete"] is not True
     ):
@@ -47,8 +49,13 @@ def validate_payload(payload: dict, dataset: Dataset) -> None:
     if datetime.fromisoformat(payload["retrieved_at"]).utcoffset() is None:
         message = "Retrieval start must include a timezone"
         raise ValueError(message)
+    west, south, east, north = dataset.description.bounds
     for record in payload["records"]:
         validate_record(record)
+        longitude, latitude = record["geometry"]["coordinates"]
+        if not (west <= longitude <= east and south <= latitude <= north):
+            message = "Facility lies outside the dataset bounds"
+            raise ValueError(message)
     if (
         len({record["external_id"] for record in payload["records"]})
         != payload["source_count"]
@@ -82,11 +89,12 @@ def write_records(
         msg = "Retrieval start must include a timezone"
         raise ValueError(msg)
     payload = {
-        "format": "nipkaart-offstreet-catalog-1",
+        "format": FORMAT,
         "dataset": dataset.code,
         "delivery_id": str(uuid4()),
         "retrieved_at": retrieved_at.astimezone(UTC).isoformat().replace("+00:00", "Z"),
         "selection": dataset.selection,
+        "source": dataset.description.as_dict(),
         "complete": True,
         "source_count": result.total_count,
         "records": records,

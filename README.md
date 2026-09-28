@@ -44,9 +44,27 @@ Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasni
 
 ## Formats
 
-Both envelopes contain `format`, `dataset` (`nl-amsterdam-garages`), `selection` (`car-garages-and-pr`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at` and `complete: true`; observations add `fetched_at`. Timestamps are UTC ISO 8601.
+Both envelopes contain `format`, `dataset` (`nl-amsterdam-garages`), `selection` (`car-garages-and-pr`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at`, `complete: true` and a `source` block; observations add `fetched_at`. Timestamps are UTC ISO 8601.
 
-Catalog record (`nipkaart-offstreet-catalog-1`):
+The catalog's `source` block describes the dataset so that core can discover it and an administrator can approve it once ([core ADR 0013](https://github.com/NIPKaart/core/blob/main/docs/adr/0013-discover-dataset-sources-from-deliveries-with-one-time-approval.md)). It comes from the dataset registry in `app/datasets.py` and is identical in every delivery of that dataset:
+
+```json
+"source": {
+  "name": "Amsterdam parkeergarages en P+R",
+  "publisher": "Gemeente Amsterdam",
+  "source_url": "https://p-info.vorin-amsterdam.nl/v1/ParkingLocation.json",
+  "licence": "CC-BY-4.0",
+  "terms_url": "https://data.overheid.nl/dataset/9orkef6t-au29g",
+  "attribution": "Gemeente Amsterdam; Actuele beschikbaarheid Parkeergarages; CC-BY 4.0.",
+  "area": {"country": "NL", "subdivision": "NL-NH", "municipality": {"scheme": "nl-cbs", "code": "GM0363", "name": "Amsterdam"}},
+  "bounds": [4.65, 52.2, 5.15, 52.5],
+  "expected_interval_hours": 24
+}
+```
+
+`licence` is an SPDX identifier, or `null` when the source publishes none. `area` uses ISO 3166 codes and the official municipality code (CBS for the Netherlands). Every facility must lie within `bounds`. Changing any of these values makes core ask for approval again, except `expected_interval_hours`.
+
+Catalog record (`nipkaart-offstreet-catalog-2`):
 
 ```json
 {

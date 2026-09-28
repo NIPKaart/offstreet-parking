@@ -17,7 +17,7 @@ from odp_amsterdam.models import GarageCategory, VehicleType
 
 from app.cities.netherlands.amsterdam import Municipality, catalog_record
 from app.datasets import DATASETS
-from app.export import export_dataset, write_records
+from app.export import export_dataset, validate_payload, write_records
 from app.records import Collection, SourceError, validate_record
 
 
@@ -161,8 +161,11 @@ class CatalogTests(unittest.TestCase):
                 first = json.loads(output.read_text())
                 asyncio.run(export_dataset("amsterdam", output))
                 second = json.loads(output.read_text())
-            self.assertEqual(first["format"], "nipkaart-offstreet-catalog-1")
+            self.assertEqual(first["format"], "nipkaart-offstreet-catalog-2")
             self.assertEqual(first["dataset"], "nl-amsterdam-garages")
+            self.assertEqual(
+                first["source"], DATASETS["amsterdam"].description.as_dict()
+            )
             self.assertEqual(first["records"], second["records"])
             self.assertNotEqual(first["delivery_id"], second["delivery_id"])
             self.assertEqual(list(Path(directory).glob("*.tmp")), [])
@@ -182,6 +185,56 @@ class CatalogTests(unittest.TestCase):
                 write_records(DATASETS["amsterdam"], result, output, datetime.now(UTC))
             self.assertEqual(output.read_bytes(), b"last good")
             self.assertEqual(list(Path(directory).glob("*.tmp")), [])
+
+    def test_source_block_identifies_the_dataset_for_core(self) -> None:
+        """Core discovers and approves sources from this block (core ADR 0013)."""
+        source = DATASETS["amsterdam"].description.as_dict()
+        self.assertEqual(source["licence"], "CC-BY-4.0")
+        self.assertEqual(
+            source["area"],
+            {
+                "country": "NL",
+                "subdivision": "NL-NH",
+                "municipality": {
+                    "scheme": "nl-cbs",
+                    "code": "GM0363",
+                    "name": "Amsterdam",
+                },
+            },
+        )
+        self.assertEqual(source["bounds"], [4.65, 52.2, 5.15, 52.5])
+        self.assertEqual(source["expected_interval_hours"], 24)
+
+    def test_missing_or_foreign_source_block_and_outside_bounds_are_rejected(
+        self,
+    ) -> None:
+        """A delivery must describe its own dataset and stay inside its area."""
+        dataset = DATASETS["amsterdam"]
+        payload = {
+            "format": "nipkaart-offstreet-catalog-2",
+            "dataset": dataset.code,
+            "delivery_id": "8dd5a15e-9491-4e8b-b07f-6f3fc063ff1e",
+            "retrieved_at": "2026-09-28T00:00:00Z",
+            "selection": dataset.selection,
+            "source": dataset.description.as_dict(),
+            "complete": True,
+            "source_count": 1,
+            "records": [record()],
+        }
+        validate_payload(payload, dataset)
+        outside = catalog_record(garage(latitude=52.09, longitude=5.12))
+        for changed in (
+            {"format": "nipkaart-offstreet-catalog-1"},
+            {"source": None},
+            {"source": {**payload["source"], "licence": None}},
+            {"records": [outside]},
+        ):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                validate_payload({**payload, **changed}, dataset)
+        without_source = dict(payload)
+        del without_source["source"]
+        with self.assertRaises(ValueError):
+            validate_payload(without_source, dataset)
 
     def test_provider_error_does_not_create_an_output(self) -> None:
         """A failed package response cannot become an empty catalog."""
