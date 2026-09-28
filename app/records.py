@@ -73,23 +73,33 @@ def validate_record(record: dict[str, Any]) -> None:
         group = record[field]
         if field == "long_stay" and group is None:
             continue
-        validate_capacity_group(group)
+        validate_group(group, ("capacity",))
     if record["source_observed_at"] is not None:
-        timestamp(datetime.fromisoformat(record["source_observed_at"]))
+        validate_timestamp(record["source_observed_at"])
 
 
-def validate_capacity_group(group: object) -> None:
-    """Allow capacity and source availability, preserving unknown and zero."""
-    if not isinstance(group, dict) or set(group) != {"capacity", "available"}:
-        message = "Parking groups must contain capacity and availability"
+def validate_group(group: object, fields: tuple[str, ...]) -> None:
+    """Require exactly the given counts, preserving unknown and zero."""
+    if not isinstance(group, dict) or set(group) != set(fields):
+        message = f"Parking groups must contain exactly {', '.join(fields)}"
         raise ValueError(message)
-    for field in ("capacity", "available"):
+    for field in fields:
         value = group[field]
         if value is not None and (
             isinstance(value, bool) or not isinstance(value, int) or value < 0
         ):
-            message = "Capacity and availability must be nonnegative integers or null"
+            message = "Parking counts must be nonnegative integers or null"
             raise ValueError(message)
+
+
+def validate_timestamp(value: object) -> datetime:
+    """Parse a persisted wire timestamp and require an explicit timezone."""
+    if not isinstance(value, str):
+        message = "Timestamps must be ISO 8601 strings"
+        raise TypeError(message)
+    parsed = datetime.fromisoformat(value)
+    timestamp(parsed)
+    return parsed
 
 
 def validate_geometry(geometry: dict[str, Any]) -> None:

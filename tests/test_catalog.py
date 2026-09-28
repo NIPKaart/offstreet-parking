@@ -62,33 +62,31 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(
             result["geometry"], {"type": "Point", "coordinates": [4.9, 52.37]}
         )
-        self.assertEqual(result["short_stay"], {"capacity": 120, "available": 27})
+        self.assertEqual(result["short_stay"], {"capacity": 120})
         self.assertIsNone(result["long_stay"])
-        self.assertEqual(result["accessible"], {"capacity": None, "available": None})
+        self.assertEqual(result["accessible"], {"capacity": None})
         self.assertEqual(result["source_observed_at"], "2026-09-28T00:00:00Z")
         self.assertNotIn("metadata_updated_at", result)
 
     def test_catalog_keeps_optional_capacity_without_live_fields(self) -> None:
         """Missing capacity stays unknown; zero is a supplied capacity."""
         self.assertEqual(
-            catalog_record(garage(long_capacity=0))["long_stay"],
-            {"capacity": 0, "available": None},
+            catalog_record(garage(long_capacity=0))["long_stay"], {"capacity": 0}
         )
         self.assertEqual(
-            catalog_record(garage(long_capacity=40))["long_stay"],
-            {"capacity": 40, "available": None},
+            catalog_record(garage(long_capacity=40))["long_stay"], {"capacity": 40}
         )
         self.assertEqual(
             catalog_record(garage(short_capacity=None))["short_stay"],
-            {"capacity": None, "available": 27},
+            {"capacity": None},
         )
         row = record()
-        del row["short_stay"]["available"]
+        row["short_stay"]["available"] = 27
         with self.assertRaises(ValueError):
             validate_record(row)
 
-    def test_catalog_includes_source_occupancy_without_accessible_claims(self) -> None:
-        """Source free spaces are visible; accessible availability stays unknown."""
+    def test_live_changes_do_not_change_the_catalog(self) -> None:
+        """Daily reviews compare metadata; free spaces and state are observations."""
         changed = catalog_record(
             garage(
                 free_space_short=0,
@@ -97,11 +95,9 @@ class CatalogTests(unittest.TestCase):
                 state="closed",
             )
         )
-        self.assertEqual(changed["short_stay"]["available"], 0)
-        self.assertEqual(
-            changed["long_stay"], {"capacity": None, "available": 5}
-        )
-        self.assertEqual(changed["accessible"], {"capacity": None, "available": None})
+        unchanged = record()
+        del changed["source_observed_at"], unchanged["source_observed_at"]
+        self.assertEqual(changed, unchanged)
         self.assertEqual(
             catalog_record(garage(short_capacity=0))["short_stay"]["capacity"],
             0,

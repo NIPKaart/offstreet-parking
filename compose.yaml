@@ -29,5 +29,38 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+  observations:
+    build: .
+    restart: unless-stopped
+    init: true
+    read_only: true
+    mem_limit: 256m
+    cpus: 0.5
+    stop_grace_period: 20s
+    env_file: .env
+    volumes:
+      - collector-data:/data
+    tmpfs:
+      - /tmp
+    command:
+      - /app/scheduler.py
+      - --interval
+      - "${OBSERVATION_INTERVAL_SECONDS:-120}"
+      - --timeout
+      - "90"
+      - --lock
+      - /data/observations-scheduler.lock
+      - --
+      - /app/.venv/bin/python
+      - /app/collector.py
+      - --kind
+      - observations
+      - --max-age-seconds
+      - "${OBSERVATION_MAX_AGE_SECONDS:-300}"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 volumes:
   collector-data:

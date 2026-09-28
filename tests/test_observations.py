@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, patch
 from app.cities.netherlands.amsterdam import Municipality, observation_record
 from app.datasets import DATASETS
 from app.export import validate_payload
-from app.observations import export_observations
+from app.observations import export_observations, validate_observation
 from app.records import Collection
 from tests.test_catalog import garage
 
@@ -140,3 +140,18 @@ class ObservationTests(unittest.TestCase):
                         with self.assertRaises(ValueError):
                             asyncio.run(export_observations("amsterdam", output, age))
                 self.assertEqual(output.read_bytes(), b"last good")
+
+    def test_persisted_records_cannot_claim_impossible_availability(self) -> None:
+        """Edited or corrupt pending files fail before reaching the bucket."""
+        valid = observation_record(garage(), FETCHED, 300)
+        validate_observation(valid)
+        for changes in (
+            {"status": "unavailable"},
+            {"observed_at": None, "valid_until": None},
+            {"valid_until": valid["observed_at"]},
+            {"status": "open"},
+            {"accessible": {"capacity": None}},
+            {"short_stay": {"capacity": 120, "available": -1}},
+        ):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                validate_observation({**valid, **changes})

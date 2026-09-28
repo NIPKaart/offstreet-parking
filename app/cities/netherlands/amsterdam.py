@@ -61,7 +61,7 @@ async def fetch_car_garages() -> list[Garage]:
 
 
 def catalog_record(garage: Garage) -> dict[str, object]:
-    """Map package metadata; occupancy never becomes accessible availability."""
+    """Map slowly changing metadata; live counts belong to observations only."""
     if (
         not math.isfinite(garage.latitude)
         or not math.isfinite(garage.longitude)
@@ -80,17 +80,11 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "short_stay": {
-            "capacity": capacity(garage.short_capacity),
-            "available": capacity(garage.free_space_short),
-        },
-        "long_stay": {
-            "capacity": capacity(garage.long_capacity),
-            "available": capacity(garage.free_space_long),
-        }
-        if garage.long_capacity is not None or garage.free_space_long is not None
+        "short_stay": {"capacity": capacity(garage.short_capacity)},
+        "long_stay": {"capacity": capacity(garage.long_capacity)}
+        if garage.long_capacity is not None
         else None,
-        "accessible": {"capacity": None, "available": None},
+        "accessible": {"capacity": None},
         "source_observed_at": timestamp(garage.updated_at),
     }
     validate_record(record)
@@ -101,7 +95,7 @@ def observation_record(
     garage: Garage, fetched_at: datetime, max_age: int
 ) -> dict[str, object]:
     """Keep dated source counts distinct from facility and accessible availability."""
-    catalog = catalog_record(garage)
+    catalog_record(garage)
     observed_at = garage.updated_at
     valid_until = observed_at + timedelta(seconds=max_age) if observed_at else None
     status = "unavailable"
@@ -114,7 +108,7 @@ def observation_record(
         "status": status,
         "source_state": garage.state,
         "short_stay": {
-            "capacity": catalog["short_stay"]["capacity"],
+            "capacity": capacity(garage.short_capacity),
             "available": capacity(garage.free_space_short)
             if status != "unavailable"
             else None,
