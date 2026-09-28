@@ -72,8 +72,7 @@ Catalog record (`nipkaart-offstreet-catalog-3`), what defines the facility:
   "name": "Byzantium",
   "source_name": "P-106_ Byzantium (opendata)",
   "facility_type": "garage",
-  "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
-  "accessible_capacity": null
+  "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]}
 }
 ```
 
@@ -86,8 +85,7 @@ Observation record (`nipkaart-offstreet-observations-2`), what the operator repo
   "source_state": "ok",
   "status": "counting",
   "capacity": 446,
-  "available": 349,
-  "accessible_available": null
+  "available": 349
 }
 ```
 
@@ -98,7 +96,7 @@ Rules for both:
 - Only short-stay (visitor) values are delivered. Long-stay counts are for season-ticket holders and say nothing to visitors.
 - `null` means unknown and `0` means zero. Amsterdam sends capacity `0` with `0` free for malfunctions and for P+R sites that only report open or full. A capacity of `0` is therefore unknown, and so are free spaces when the capacity is unknown.
 - `status` is the operator status from the universal package: `counting` (live count), `open` or `full` (status-only sites), `closed`, `malfunction`, or `null` when unknown. A closed facility also reports `0` free, so `0` alone never means full.
-- General capacity or free spaces never imply accessible spaces. The source provides no accessible data, so those fields are `null`.
+- Only general spaces are delivered. General capacity or free spaces never imply accessible spaces, and accessible counts are not part of either format because sources almost never publish them.
 - `name` is the package's readable name; `source_name` is the original label. Coordinates are WGS84 longitude, latitude.
 - The catalog holds no live values, so a daily review only shows real metadata changes.
 - Observations pass the source values on unchanged. `observed_at` is the source's own measurement time (`null` if absent), not the fetch time. `source_state` is the feed state (`ok` or `error`). Core decides freshness and must not show counts from a non-`ok` state as current availability. Sources can report more free spaces than capacity; core shows such counts without an occupancy percentage.

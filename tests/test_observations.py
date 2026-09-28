@@ -41,7 +41,6 @@ class ObservationTests(unittest.TestCase):
                 "status": "closed",
                 "capacity": 328,
                 "available": 0,
-                "accessible_available": None,
             },
         )
 

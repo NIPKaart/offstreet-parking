@@ -94,7 +94,6 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "accessible_capacity": None,
     }
     validate_record(record)
     return record
@@ -114,7 +113,6 @@ def observation_record(garage: Garage) -> dict[str, object]:
         "status": garage.status.value if garage.status else None,
         "capacity": known_capacity(garage.short_capacity),
         "available": available(garage.free_space_short, garage.short_capacity),
-        "accessible_available": None,
     }
     validate_observation(record)
     return record

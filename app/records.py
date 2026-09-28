@@ -52,7 +52,6 @@ CATALOG_FIELDS = {
     "source_name",
     "facility_type",
     "geometry",
-    "accessible_capacity",
 }
 OBSERVATION_FIELDS = {
     "external_id",
@@ -61,7 +60,6 @@ OBSERVATION_FIELDS = {
     "status",
     "capacity",
     "available",
-    "accessible_available",
 }
 OBSERVATION_STATUSES = {"counting", "open", "full", "closed", "malfunction"}
 
@@ -77,7 +75,6 @@ def validate_record(record: dict[str, Any]) -> None:
         message = "Unsupported facility type"
         raise ValueError(message)
     validate_geometry(record["geometry"])
-    validate_counts(record, ("accessible_capacity",))
 
 
 def validate_observation(record: dict[str, Any]) -> None:
@@ -93,7 +90,7 @@ def validate_observation(record: dict[str, Any]) -> None:
         raise ValueError(message)
     if record["observed_at"] is not None:
         timestamp(datetime.fromisoformat(record["observed_at"]))
-    validate_counts(record, ("capacity", "available", "accessible_available"))
+    validate_counts(record, ("capacity", "available"))
 
 
 def validate_text(value: object) -> None:

@@ -62,7 +62,6 @@ class CatalogTests(unittest.TestCase):
                 "source_name": "PR-123_ Example P+R (opendata)",
                 "facility_type": "park_and_ride",
                 "geometry": {"type": "Point", "coordinates": [4.9, 52.37]},
-                "accessible_capacity": None,
             },
         )
         row = record()
