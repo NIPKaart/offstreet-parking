@@ -80,13 +80,17 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "capacity": {
-            "general_total": None,
-            "general_short_stay": capacity(garage.short_capacity),
-            "general_long_stay": capacity(garage.long_capacity),
-            "accessible": None,
+        "short_stay": {
+            "capacity": capacity(garage.short_capacity),
+            "available": capacity(garage.free_space_short),
         },
-        "metadata_updated_at": None,
+        "long_stay": {
+            "capacity": capacity(garage.long_capacity),
+            "available": capacity(garage.free_space_long),
+        }
+        if garage.long_capacity is not None or garage.free_space_long is not None
+        else None,
+        "accessible": {"capacity": None, "available": None},
         "source_observed_at": timestamp(garage.updated_at),
     }
     validate_record(record)
@@ -109,15 +113,19 @@ def observation_record(
         "valid_until": timestamp(valid_until),
         "status": status,
         "source_state": garage.state,
-        "capacity": catalog["capacity"],
-        "availability": {
-            "general_total": None,
-            "general_short_stay": capacity(garage.free_space_short)
+        "short_stay": {
+            "capacity": catalog["short_stay"]["capacity"],
+            "available": capacity(garage.free_space_short)
             if status != "unavailable"
             else None,
-            "general_long_stay": capacity(garage.free_space_long)
-            if status != "unavailable"
-            else None,
-            "accessible": None,
         },
+        "long_stay": {
+            "capacity": capacity(garage.long_capacity),
+            "available": capacity(garage.free_space_long)
+            if status != "unavailable"
+            else None,
+        }
+        if garage.long_capacity is not None or garage.free_space_long is not None
+        else None,
+        "accessible": {"capacity": None, "available": None},
     }

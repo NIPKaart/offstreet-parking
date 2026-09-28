@@ -28,17 +28,23 @@ class ObservationTests(unittest.TestCase):
         self.assertEqual(record["status"], "current")
         self.assertEqual(record["observed_at"], "2026-09-28T00:00:00Z")
         self.assertEqual(record["valid_until"], "2026-09-28T00:05:00Z")
-        self.assertEqual(
-            record["availability"],
-            {
-                "general_total": None,
-                "general_short_stay": 0,
-                "general_long_stay": None,
-                "accessible": None,
-            },
-        )
-        self.assertEqual(record["capacity"]["general_short_stay"], 120)
-        self.assertIsNone(record["capacity"]["general_total"])
+        self.assertEqual(record["short_stay"], {"capacity": 120, "available": 0})
+        self.assertIsNone(record["long_stay"])
+        self.assertEqual(record["accessible"], {"capacity": None, "available": None})
+
+    def test_optional_long_stay_keeps_partial_data_and_zero(self) -> None:
+        """Only absent source data omits the group; zero is a known count."""
+        for total, available in ((40, 12), (None, 12), (40, None), (0, 0)):
+            with self.subTest(total=total, available=available):
+                record = observation_record(
+                    garage(long_capacity=total, free_space_long=available), FETCHED, 300
+                )
+                self.assertEqual(
+                    record["long_stay"], {"capacity": total, "available": available}
+                )
+                self.assertEqual(
+                    record["short_stay"], {"capacity": 120, "available": 27}
+                )
 
     def test_expired_measurement_is_historical_at_the_exact_boundary(self) -> None:
         """Never refresh an observation's expiry merely by fetching it again."""
@@ -46,7 +52,7 @@ class ObservationTests(unittest.TestCase):
             with self.subTest(fetched=fetched):
                 record = observation_record(garage(), fetched, 300)
                 self.assertEqual(record["status"], "stale")
-                self.assertEqual(record["availability"]["general_short_stay"], 27)
+                self.assertEqual(record["short_stay"]["available"], 27)
                 self.assertEqual(record["valid_until"], "2026-09-28T00:05:00Z")
 
     def test_unusable_source_observations_do_not_claim_free_spaces(self) -> None:
@@ -58,9 +64,17 @@ class ObservationTests(unittest.TestCase):
             {"updated_at": FETCHED + timedelta(seconds=1)},
         ):
             with self.subTest(changes=changes):
-                record = observation_record(garage(**changes), FETCHED, 300)
+                record = observation_record(
+                    garage(long_capacity=40, free_space_long=12, **changes),
+                    FETCHED,
+                    300,
+                )
                 self.assertEqual(record["status"], "unavailable")
-                self.assertTrue(all(v is None for v in record["availability"].values()))
+                self.assertEqual(
+                    record["long_stay"], {"capacity": 40, "available": None}
+                )
+                self.assertIsNone(record["short_stay"]["available"])
+                self.assertIsNone(record["accessible"]["available"])
 
     def test_invalid_counts_and_timestamps_fail_closed(self) -> None:
         """Reject lossy, negative or timezone-free source values."""

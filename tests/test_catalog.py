@@ -18,7 +18,7 @@ from odp_amsterdam.models import GarageCategory, VehicleType
 from app.cities.netherlands.amsterdam import Municipality, catalog_record
 from app.datasets import DATASETS
 from app.export import export_dataset, write_records
-from app.records import Collection, SourceError
+from app.records import Collection, SourceError, validate_record
 
 
 def garage(**changes: object) -> Garage:
@@ -62,33 +62,48 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(
             result["geometry"], {"type": "Point", "coordinates": [4.9, 52.37]}
         )
-        self.assertEqual(
-            result["capacity"],
-            {
-                "general_total": None,
-                "general_short_stay": 120,
-                "general_long_stay": None,
-                "accessible": None,
-            },
-        )
+        self.assertEqual(result["short_stay"], {"capacity": 120, "available": 27})
+        self.assertIsNone(result["long_stay"])
+        self.assertEqual(result["accessible"], {"capacity": None, "available": None})
         self.assertEqual(result["source_observed_at"], "2026-09-28T00:00:00Z")
-        self.assertIsNone(result["metadata_updated_at"])
+        self.assertNotIn("metadata_updated_at", result)
 
-    def test_occupancy_changes_do_not_change_the_catalog_metadata(self) -> None:
-        """General free spaces and status cannot leak into accessible availability."""
+    def test_catalog_keeps_optional_capacity_without_live_fields(self) -> None:
+        """Missing capacity stays unknown; zero is a supplied capacity."""
         self.assertEqual(
-            record(),
-            catalog_record(
-                garage(
-                    free_space_short=0,
-                    free_space_long=5,
-                    availability_pct=0,
-                    state="closed",
-                )
-            ),
+            catalog_record(garage(long_capacity=0))["long_stay"],
+            {"capacity": 0, "available": None},
         )
         self.assertEqual(
-            catalog_record(garage(short_capacity=0))["capacity"]["general_short_stay"],
+            catalog_record(garage(long_capacity=40))["long_stay"],
+            {"capacity": 40, "available": None},
+        )
+        self.assertEqual(
+            catalog_record(garage(short_capacity=None))["short_stay"],
+            {"capacity": None, "available": 27},
+        )
+        row = record()
+        del row["short_stay"]["available"]
+        with self.assertRaises(ValueError):
+            validate_record(row)
+
+    def test_catalog_includes_source_occupancy_without_accessible_claims(self) -> None:
+        """Source free spaces are visible; accessible availability stays unknown."""
+        changed = catalog_record(
+            garage(
+                free_space_short=0,
+                free_space_long=5,
+                availability_pct=0,
+                state="closed",
+            )
+        )
+        self.assertEqual(changed["short_stay"]["available"], 0)
+        self.assertEqual(
+            changed["long_stay"], {"capacity": None, "available": 5}
+        )
+        self.assertEqual(changed["accessible"], {"capacity": None, "available": None})
+        self.assertEqual(
+            catalog_record(garage(short_capacity=0))["short_stay"]["capacity"],
             0,
         )
 

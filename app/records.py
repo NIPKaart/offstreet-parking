@@ -54,8 +54,9 @@ def validate_record(record: dict[str, Any]) -> None:
         "source_name",
         "facility_type",
         "geometry",
-        "capacity",
-        "metadata_updated_at",
+        "short_stay",
+        "long_stay",
+        "accessible",
         "source_observed_at",
     }:
         message = "Unexpected catalog fields"
@@ -68,24 +69,27 @@ def validate_record(record: dict[str, Any]) -> None:
         message = "Unsupported facility type"
         raise ValueError(message)
     validate_geometry(record["geometry"])
-    capacities = record["capacity"]
-    if set(capacities) != {
-        "general_total",
-        "general_short_stay",
-        "general_long_stay",
-        "accessible",
-    }:
-        message = "General and accessible capacities must stay separate"
+    for field in ("short_stay", "long_stay", "accessible"):
+        group = record[field]
+        if field == "long_stay" and group is None:
+            continue
+        validate_capacity_group(group)
+    if record["source_observed_at"] is not None:
+        timestamp(datetime.fromisoformat(record["source_observed_at"]))
+
+
+def validate_capacity_group(group: object) -> None:
+    """Allow capacity and source availability, preserving unknown and zero."""
+    if not isinstance(group, dict) or set(group) != {"capacity", "available"}:
+        message = "Parking groups must contain capacity and availability"
         raise ValueError(message)
-    for value in capacities.values():
+    for field in ("capacity", "available"):
+        value = group[field]
         if value is not None and (
             isinstance(value, bool) or not isinstance(value, int) or value < 0
         ):
-            message = "Capacity must be a nonnegative integer or null"
+            message = "Capacity and availability must be nonnegative integers or null"
             raise ValueError(message)
-    for field in ("metadata_updated_at", "source_observed_at"):
-        if record[field] is not None:
-            timestamp(datetime.fromisoformat(record[field]))
 
 
 def validate_geometry(geometry: dict[str, Any]) -> None:

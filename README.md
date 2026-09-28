@@ -69,20 +69,16 @@ Each record contains exactly these fields (illustrative values):
   "source_name": "P-106_ Byzantium (opendata)",
   "facility_type": "garage",
   "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
-  "capacity": {
-    "general_total": null,
-    "general_short_stay": 446,
-    "general_long_stay": null,
-    "accessible": null
-  },
-  "metadata_updated_at": null,
+  "short_stay": {"capacity": 446},
+  "long_stay": null,
+  "accessible": {"capacity": null},
   "source_observed_at": "2026-09-27T23:25:05Z"
 }
 ```
 
-`external_id` preserves the source `Id`, including case; a moved facility keeps that ID. `name` is the package-normalized display name; `source_name` preserves the original label. Technical prefixes and the trailing `(opendata)` label are removed, while meaningful numbers such as `P21` and `P4` and parentheses such as `(ACTA)` remain. `facility_type` is `garage` or `park_and_ride`. Coordinates are WGS84 **longitude, latitude**. Short/long-stay capacities are separate general counts: they are not added or inferred to be accessible. The source supplies no explicit reliable total and does not establish that the two categories are disjoint, so `general_total` stays `null`. For example, two category capacities of 110 must not silently become a claimed total of 220. The feed does not provide accessible capacity, so it stays `null` even when general capacity is zero.
+`external_id` preserves the source `Id`, including case; a moved facility keeps that ID. `name` is the package-normalized display name; `source_name` preserves the original label. Technical prefixes and the trailing `(opendata)` label are removed, while meaningful numbers such as `P21` and `P4` and parentheses such as `(ACTA)` remain. `facility_type` is `garage` or `park_and_ride`. Coordinates are WGS84 **longitude, latitude**. Short/long-stay capacities are separate general counts: they are not added or inferred to be accessible. The source supplies no explicit reliable combined total and does not establish that the two categories are disjoint, so no combined total is inferred. `short_stay` is the primary visitor-parking group; `long_stay` represents the source category for season-ticket holders and is `null` when no capacity is supplied. This means no reported data, not proof that season-ticket parking is unsupported. For example, two category capacities of 110 must not silently become a claimed total of 220. The feed does not provide accessible capacity, so it stays `null` even when general capacity is zero.
 
-`source_observed_at` preserves the package's source `PubDate` in UTC; it is an observation/publication timestamp and must not be treated as the modification date of catalog metadata. `metadata_updated_at` is unknown. A core metadata comparison should not treat a newer `source_observed_at` alone as a facility change. Free spaces, occupancy percentages, open/closed status and accessible availability are deliberately absent. Those observations are available through the separate local export below.
+`source_observed_at` preserves the package's source `PubDate` in UTC; it is an observation/publication timestamp and must not be treated as the modification date of catalog metadata. The source has no separate metadata modification timestamp, so the catalog does not emit one. A core metadata comparison should not treat a newer `source_observed_at` alone as a facility change. Free spaces, occupancy percentages, open/closed status and accessible availability are deliberately absent. Those observations are available through the separate local export below.
 
 ## Local live-observation export
 
@@ -103,12 +99,13 @@ Example observation (illustrative counts):
   "valid_until": "2026-09-27T23:54:05Z",
   "status": "current",
   "source_state": "ok",
-  "capacity": {"general_total": null, "general_short_stay": 446, "general_long_stay": null, "accessible": null},
-  "availability": {"general_total": null, "general_short_stay": 391, "general_long_stay": null, "accessible": null}
+  "short_stay": {"capacity": 446, "available": 391},
+  "long_stay": null,
+  "accessible": {"capacity": null, "available": null}
 }
 ```
 
-`capacity` holds source capacity; `availability` holds source free spaces. Both distinguish unknown (`null`) from zero. Totals remain unknown rather than summing unverified categories. General free spaces never imply free accessible spaces.
+`short_stay` groups the visitor capacity and available spaces together. The optional `long_stay` uses the same shape for season-ticket holders: for example `{"capacity": 40, "available": 12}`. It is `null` only when the source supplies neither long-stay capacity nor free spaces; partial data and zero remain visible. Each group distinguishes unknown (`null`) from zero. The catalog and live export use the same grouped fields; the live export additionally carries freshness and status. General free spaces never imply free accessible spaces, and the groups are never summed into an unverified total.
 
 `current` requires source state `ok` and a source timestamp at or before retrieval start, strictly less than the configured maximum age. Exactly at expiry the record is `stale`: counts remain dated historical observations, not current availability. A missing/future timestamp or non-`ok` source state is `unavailable` and suppresses free-space counts. `unavailable` describes unusable observation data, not a claim that the garage is closed. `valid_until` is computed from source time, never retrieval time; consumers must check this timestamp again when reading a file because an exported `current` label ages. The default five minutes is a configurable local-test policy, not an approved production cadence/freshness agreement.
 
@@ -141,7 +138,7 @@ One serial scheduler runs immediately, then every 86,400 seconds after success, 
 
 On 2026-09-28 (Europe/Amsterdam), the corrected package exported 47 car facilities with 47 unique source IDs. Coordinates ranged from latitude 52.3078–52.403327 and longitude 4.83811–4.969892532348648. All 47 accessible capacities remained unknown. The original 7.0.0 package failed location validation on the current latitude-first feed and classified `FP-` bicycle facilities as cars; the package fix covers current and historic axis orders and prefixes.
 
-All 34 collector tests and code checks passed locally. A subsequent paired catalog/live export returned the same 47 source IDs, including 10 P+R facilities; the live snapshot held 44 current observations and three unavailable observations. The Docker image built successfully, ran its help commands without network access and repeated the live export with the same 47 facility IDs and a new delivery UUID. The naming package has 82 passing tests, including public vehicle-filter checks and current/legacy name cases.
+All 36 collector tests and code checks passed locally. A subsequent paired catalog/live export returned the same 47 source IDs, including 10 P+R facilities; the live snapshot held 44 current observations and three unavailable observations. The Docker image built successfully, ran its help commands without network access and repeated the live export with the same 47 facility IDs and a new delivery UUID. The naming package has 82 passing tests, including public vehicle-filter checks and current/legacy name cases.
 
 Offline tests cover small package-object mappings, source/size/completeness failures, stable IDs across exports, atomic output, immutable upload retries, conflicting bytes, scheduling, timeouts and shutdown. Botocore request validation substitutes for a live bucket in those tests. Passing tests or a local export do not prove R2 credentials, deployment or core compatibility.
 
