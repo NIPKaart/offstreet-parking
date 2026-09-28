@@ -97,7 +97,7 @@ uv run python export.py --city amsterdam --kind observations --output /tmp/obser
 
 ## R2 delivery
 
-Use a dedicated private bucket and an Object Read & Write token scoped to that bucket only (see `.env.example`). Core uses its own read-only token.
+Deliver to the existing private EU bucket `nipkaart-imports`, next to the municipal collector's `municipal/` prefix. Create a separate token for this collector with Object Read & Write access, scoped to that bucket only, and enter it in `.env` (see `.env.example`). R2 tokens cannot be limited to a prefix, so this token could technically overwrite `municipal/` objects; the collector itself never overwrites. Core reads with its existing credentials.
 
 ```bash
 uv run --env-file .env python collector.py --city amsterdam --directory /tmp/offstreet
@@ -109,7 +109,28 @@ Every upload is one `PutObject` with `If-None-Match: *` and a SHA-256 checksum. 
 - **Catalog:** first saved as `<directory>/nl-amsterdam-garages/pending.json`. After a failure, that same file is retried before anything new is fetched, and it moves to `last.json` once it is delivered. Do not edit or delete the pending file to recover.
 - **Observations:** fetched and uploaded straight away, with no local state. A failure delivers nothing; the next run two minutes later is newer anyway.
 
-Retention: keep catalog objects. Observation objects are only briefly useful, so give their prefix its own lifecycle rule, for example in the R2 dashboard or with `wrangler r2 bucket lifecycle` (expire after 7 days). Never apply that rule to `offstreet/`.
+## Retention
+
+Set these two lifecycle rules on `nipkaart-imports` once, before the first delivery:
+
+| Rule name | Prefix | Delete after | Why |
+| --- | --- | --- | --- |
+| `expire-offstreet-catalog` | `offstreet/` | 30 days | Well beyond the 7-day core outage window, same as `municipal/` |
+| `expire-offstreet-observations` | `offstreet-observations/` | 7 days | Outdated within minutes; kept only for debugging |
+
+The trailing slash matters: `offstreet/` does not match `offstreet-observations/`. Never add a rule without a prefix, because it would also delete municipal deliveries.
+
+**Dashboard:** R2 → `nipkaart-imports` → Settings → Object lifecycle rules → Add rule. Enter the name and prefix, choose to delete objects after the number of days in the table, and save. Repeat for the second rule.
+
+**Or with Wrangler** (after `npx wrangler login`; the bucket is in the EU jurisdiction):
+
+```bash
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-catalog offstreet/ --expire-days 30 --jurisdiction eu
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-observations offstreet-observations/ --expire-days 7 --jurisdiction eu
+npx wrangler r2 bucket lifecycle list nipkaart-imports --jurisdiction eu
+```
+
+The list should show both offstreet rules plus the municipal rule (`municipal/`, 30 days) from [disabled-parking](https://github.com/NIPKaart/disabled-parking#retention).
 
 ## Scheduling
 
