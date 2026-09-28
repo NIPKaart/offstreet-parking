@@ -67,11 +67,21 @@ class CatalogTests(unittest.TestCase):
                 "accessible_capacity": None,
             },
         )
-        self.assertEqual(catalog_record(garage(long_capacity=0))["long_capacity"], 0)
+        self.assertEqual(catalog_record(garage(long_capacity=40))["long_capacity"], 40)
         row = record()
         row["short_available"] = 27
         with self.assertRaises(ValueError):
             validate_record(row)
+
+    def test_zero_capacity_placeholders_become_unknown(self) -> None:
+        """A malfunction or status-only P+R reports 0/0, not an empty garage."""
+        for state in ("error", "ok"):
+            with self.subTest(state=state):
+                result = catalog_record(
+                    garage(state=state, short_capacity=0, long_capacity=0)
+                )
+                self.assertIsNone(result["short_capacity"])
+                self.assertIsNone(result["long_capacity"])
 
     def test_live_changes_do_not_change_the_catalog(self) -> None:
         """Daily reviews compare metadata; time, counts and state are observations."""

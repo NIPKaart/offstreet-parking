@@ -64,6 +64,16 @@ async def fetch_car_garages() -> list[Garage]:
         raise SourceError(message) from error
 
 
+def known_capacity(value: object) -> int | None:
+    """Treat 0 as unknown: the feed sends 0/0 for errors and status-only P+R."""
+    return capacity(value) or None
+
+
+def available(free: object, total: object) -> int | None:
+    """Free spaces without a known capacity are the same placeholder."""
+    return capacity(free) if known_capacity(total) is not None else None
+
+
 def catalog_record(garage: Garage) -> dict[str, object]:
     """Map slowly changing metadata; live counts belong to observations only."""
     if (
@@ -84,8 +94,8 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "short_capacity": capacity(garage.short_capacity),
-        "long_capacity": capacity(garage.long_capacity),
+        "short_capacity": known_capacity(garage.short_capacity),
+        "long_capacity": known_capacity(garage.long_capacity),
         "accessible_capacity": None,
     }
     validate_record(record)
@@ -98,8 +108,8 @@ def observation_record(garage: Garage) -> dict[str, object]:
         "external_id": garage.garage_id,
         "observed_at": timestamp(garage.updated_at),
         "source_state": garage.state,
-        "short_available": capacity(garage.free_space_short),
-        "long_available": capacity(garage.free_space_long),
+        "short_available": available(garage.free_space_short, garage.short_capacity),
+        "long_available": available(garage.free_space_long, garage.long_capacity),
         "accessible_available": None,
     }
     validate_observation(record)

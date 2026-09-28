@@ -22,7 +22,9 @@ class ObservationTests(unittest.TestCase):
     def test_source_time_state_and_counts_are_passed_on(self) -> None:
         """Core decides freshness, so the collector adds no status or expiry."""
         record = observation_record(
-            garage(free_space_short=0, free_space_long=12, state="closed")
+            garage(
+                free_space_short=0, long_capacity=40, free_space_long=12, state="closed"
+            )
         )
         self.assertEqual(
             record,
@@ -35,6 +37,21 @@ class ObservationTests(unittest.TestCase):
                 "accessible_available": None,
             },
         )
+
+    def test_placeholder_counts_become_unknown(self) -> None:
+        """Without a known capacity, a reported 0 free spaces is not "full"."""
+        record = observation_record(
+            garage(
+                state="error",
+                short_capacity=0,
+                free_space_short=0,
+                long_capacity=None,
+                free_space_long=3,
+            )
+        )
+        self.assertEqual(record["source_state"], "error")
+        self.assertIsNone(record["short_available"])
+        self.assertIsNone(record["long_available"])
 
     def test_unknown_values_stay_unknown(self) -> None:
         """Missing time or counts never become zero or a fetch time."""
@@ -50,7 +67,7 @@ class ObservationTests(unittest.TestCase):
         """Reject lossy, negative or timezone-free source values."""
         for changes in (
             {"free_space_short": -1},
-            {"free_space_long": True},
+            {"free_space_long": True, "long_capacity": 40},
             {"free_space_short": 1.5},
             {"garage_id": ""},
             {"updated_at": datetime(2026, 9, 28, tzinfo=None)},  # noqa: DTZ001

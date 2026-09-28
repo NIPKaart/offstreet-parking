@@ -78,6 +78,7 @@ Rules for both:
 
 - `external_id` is the original source ID and joins the two streams. A missing observation never means a facility was removed.
 - `null` means unknown and `0` means zero. Short-stay (visitors) and long-stay (season tickets) counts stay separate and are never summed.
+- Amsterdam sends capacity `0` with `0` free for malfunctions (`STORING_DEFAULT`) and for P+R sites that only report a free/full status. A capacity of `0` is therefore stored as unknown, and so are free spaces when the capacity is unknown.
 - General capacity or free spaces never imply accessible spaces. The source provides no accessible data, so those fields are `null`.
 - `name` is the package's readable name; `source_name` is the original label. Coordinates are WGS84 longitude, latitude.
 - The catalog holds no live values, so a daily review only shows real metadata changes.
