@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from odp_amsterdam import GarageStatus
+
 from app.cities.netherlands.amsterdam import Municipality, observation_record
 from app.datasets import DATASETS
 from app.export import validate_payload
@@ -19,11 +21,15 @@ from tests.test_catalog import garage
 class ObservationTests(unittest.TestCase):
     """Pass source values on; keep zero, unknown and accessibility distinct."""
 
-    def test_source_time_state_and_counts_are_passed_on(self) -> None:
-        """Core decides freshness, so the collector adds no status or expiry."""
+    def test_source_time_state_status_and_counts_are_passed_on(self) -> None:
+        """Core decides freshness; capacity and status travel with the count."""
         record = observation_record(
             garage(
-                free_space_short=0, long_capacity=40, free_space_long=12, state="closed"
+                free_space_short=0,
+                short_capacity=328,
+                long_capacity=40,
+                free_space_long=12,
+                status=GarageStatus.CLOSED,
             )
         )
         self.assertEqual(
@@ -31,10 +37,10 @@ class ObservationTests(unittest.TestCase):
             {
                 "external_id": "source-original-ID",
                 "observed_at": "2026-09-28T00:00:00Z",
-                "source_state": "closed",
-                "short_available": 0,
-                "long_available": 12,
-                "accessible_available": None,
+                "source_state": "ok",
+                "status": "closed",
+                "capacity": 328,
+                "available": 0,
             },
         )
 
@@ -45,13 +51,13 @@ class ObservationTests(unittest.TestCase):
                 state="error",
                 short_capacity=0,
                 free_space_short=0,
-                long_capacity=None,
-                free_space_long=3,
+                status=GarageStatus.MALFUNCTION,
             )
         )
         self.assertEqual(record["source_state"], "error")
-        self.assertIsNone(record["short_available"])
-        self.assertIsNone(record["long_available"])
+        self.assertEqual(record["status"], "malfunction")
+        self.assertIsNone(record["capacity"])
+        self.assertIsNone(record["available"])
 
     def test_unknown_values_stay_unknown(self) -> None:
         """Missing time or counts never become zero or a fetch time."""
@@ -60,14 +66,14 @@ class ObservationTests(unittest.TestCase):
         )
         self.assertIsNone(record["observed_at"])
         self.assertIsNone(record["source_state"])
-        self.assertIsNone(record["short_available"])
-        self.assertIsNone(record["long_available"])
+        self.assertIsNone(record["status"])
+        self.assertIsNone(record["available"])
 
     def test_invalid_source_values_fail_closed(self) -> None:
         """Reject lossy, negative or timezone-free source values."""
         for changes in (
             {"free_space_short": -1},
-            {"free_space_long": True, "long_capacity": 40},
+            {"short_capacity": True},
             {"free_space_short": 1.5},
             {"garage_id": ""},
             {"updated_at": datetime(2026, 9, 28, tzinfo=None)},  # noqa: DTZ001
@@ -81,6 +87,8 @@ class ObservationTests(unittest.TestCase):
             validate_observation(
                 {**observation_record(garage()), "accessible_capacity": None}
             )
+        with self.assertRaises(ValueError):
+            validate_observation({**observation_record(garage()), "status": "GETAL"})
 
     def test_export_uses_car_selection_and_cannot_pass_as_catalog(self) -> None:
         """The two streams share source identity but have different contracts."""
@@ -96,7 +104,7 @@ class ObservationTests(unittest.TestCase):
                 )
             fetch.assert_awaited_once_with(vehicle="car")
             payload = json.loads(output.read_text())
-            self.assertEqual(payload["format"], "nipkaart-offstreet-observations-1")
+            self.assertEqual(payload["format"], "nipkaart-offstreet-observations-2")
             self.assertEqual(payload["dataset"], "nl-amsterdam-garages")
             self.assertEqual([r["external_id"] for r in payload["records"]], ["a", "z"])
             self.assertLessEqual(

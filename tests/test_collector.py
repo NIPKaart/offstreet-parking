@@ -42,7 +42,7 @@ class CollectorTests(unittest.TestCase):
                 {
                     "dataset": DATASET,
                     "delivery_id": str(uuid4()),
-                    "format": "nipkaart-offstreet-catalog-2",
+                    "format": "nipkaart-offstreet-catalog-3",
                     "selection": "car-garages-and-pr",
                     "source": DATASETS["amsterdam"].description.as_dict(),
                     "complete": True,
@@ -218,7 +218,7 @@ class ObservationCollectorTests(unittest.TestCase):
             aws_secret_access_key="test",  # noqa: S106 - dummy SDK stub credentials
         )
         self.payload = {
-            "format": "nipkaart-offstreet-observations-1",
+            "format": "nipkaart-offstreet-observations-2",
             "dataset": DATASET,
             "selection": "car-garages-and-pr",
             "delivery_id": str(uuid4()),
