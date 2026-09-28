@@ -64,7 +64,7 @@ The catalog's `source` block describes the dataset so that core can discover it 
 
 `licence` is an SPDX identifier, or `null` when the source publishes none. `area` uses ISO 3166 codes and the official municipality code (CBS for the Netherlands). Every facility must lie within `bounds`. Changing any of these values makes core ask for approval again, except `expected_interval_hours`.
 
-Catalog record (`nipkaart-offstreet-catalog-2`):
+Catalog record (`nipkaart-offstreet-catalog-3`), what defines the facility:
 
 ```json
 {
@@ -73,21 +73,20 @@ Catalog record (`nipkaart-offstreet-catalog-2`):
   "source_name": "P-106_ Byzantium (opendata)",
   "facility_type": "garage",
   "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
-  "short_capacity": 446,
-  "long_capacity": null,
   "accessible_capacity": null
 }
 ```
 
-Observation record (`nipkaart-offstreet-observations-1`):
+Observation record (`nipkaart-offstreet-observations-2`), what the operator reports at a moment:
 
 ```json
 {
   "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
   "observed_at": "2026-09-28T09:13:05Z",
   "source_state": "ok",
-  "short_available": 349,
-  "long_available": null,
+  "status": "counting",
+  "capacity": 446,
+  "available": 349,
   "accessible_available": null
 }
 ```
@@ -95,12 +94,14 @@ Observation record (`nipkaart-offstreet-observations-1`):
 Rules for both:
 
 - `external_id` is the original source ID and joins the two streams. A missing observation never means a facility was removed.
-- `null` means unknown and `0` means zero. Short-stay (visitors) and long-stay (season tickets) counts stay separate and are never summed.
-- Amsterdam sends capacity `0` with `0` free for malfunctions (`STORING_DEFAULT`) and for P+R sites that only report a free/full status. A capacity of `0` is therefore stored as unknown, and so are free spaces when the capacity is unknown.
+- Capacity is an observation, not catalog metadata: it changes during the day (P4 Villa Arena went from 1046 to 1087 spaces within hours on 2026-09-28). Free spaces are only meaningful against the capacity reported with them.
+- Only short-stay (visitor) values are delivered. Long-stay counts are for season-ticket holders and say nothing to visitors.
+- `null` means unknown and `0` means zero. Amsterdam sends capacity `0` with `0` free for malfunctions and for P+R sites that only report open or full. A capacity of `0` is therefore unknown, and so are free spaces when the capacity is unknown.
+- `status` is the operator status from the universal package: `counting` (live count), `open` or `full` (status-only sites), `closed`, `malfunction`, or `null` when unknown. A closed facility also reports `0` free, so `0` alone never means full.
 - General capacity or free spaces never imply accessible spaces. The source provides no accessible data, so those fields are `null`.
 - `name` is the package's readable name; `source_name` is the original label. Coordinates are WGS84 longitude, latitude.
 - The catalog holds no live values, so a daily review only shows real metadata changes.
-- Observations pass the source values on unchanged. `observed_at` is the source's own measurement time (`null` if absent), not the fetch time. `source_state` is the source status: the feed reports `ok` or `error`. Core decides freshness and must not show counts from a non-`ok` state as current availability.
+- Observations pass the source values on unchanged. `observed_at` is the source's own measurement time (`null` if absent), not the fetch time. `source_state` is the feed state (`ok` or `error`). Core decides freshness and must not show counts from a non-`ok` state as current availability. Sources can report more free spaces than capacity; core shows such counts without an occupancy percentage.
 
 A retrieval is rejected as a whole when it is empty, has duplicate or blank IDs, invalid locations or counts, more than 10,000 records or more than 32 MiB, or does not finish within 180 seconds. Amsterdam coordinates must lie within latitude 52–53 and longitude 4–6.
 

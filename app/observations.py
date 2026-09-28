@@ -14,7 +14,7 @@ from app.records import timestamp
 if TYPE_CHECKING:
     from pathlib import Path
 
-FORMAT = "nipkaart-offstreet-observations-1"
+FORMAT = "nipkaart-offstreet-observations-2"
 
 
 async def collect_observations(city: str) -> dict:

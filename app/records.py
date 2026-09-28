@@ -52,18 +52,18 @@ CATALOG_FIELDS = {
     "source_name",
     "facility_type",
     "geometry",
-    "short_capacity",
-    "long_capacity",
     "accessible_capacity",
 }
 OBSERVATION_FIELDS = {
     "external_id",
     "observed_at",
     "source_state",
-    "short_available",
-    "long_available",
+    "status",
+    "capacity",
+    "available",
     "accessible_available",
 }
+OBSERVATION_STATUSES = {"counting", "open", "full", "closed", "malfunction"}
 
 
 def validate_record(record: dict[str, Any]) -> None:
@@ -77,7 +77,7 @@ def validate_record(record: dict[str, Any]) -> None:
         message = "Unsupported facility type"
         raise ValueError(message)
     validate_geometry(record["geometry"])
-    validate_counts(record, ("short_capacity", "long_capacity", "accessible_capacity"))
+    validate_counts(record, ("accessible_capacity",))
 
 
 def validate_observation(record: dict[str, Any]) -> None:
@@ -88,11 +88,12 @@ def validate_observation(record: dict[str, Any]) -> None:
     validate_text(record["external_id"])
     if record["source_state"] is not None:
         validate_text(record["source_state"])
+    if record["status"] is not None and record["status"] not in OBSERVATION_STATUSES:
+        message = "Unsupported operator status"
+        raise ValueError(message)
     if record["observed_at"] is not None:
         timestamp(datetime.fromisoformat(record["observed_at"]))
-    validate_counts(
-        record, ("short_available", "long_available", "accessible_available")
-    )
+    validate_counts(record, ("capacity", "available", "accessible_available"))
 
 
 def validate_text(value: object) -> None:

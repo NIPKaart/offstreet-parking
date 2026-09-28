@@ -75,7 +75,7 @@ def available(free: object, total: object) -> int | None:
 
 
 def catalog_record(garage: Garage) -> dict[str, object]:
-    """Map slowly changing metadata; live counts belong to observations only."""
+    """Map what defines a facility; what changes during the day is an observation."""
     if (
         not math.isfinite(garage.latitude)
         or not math.isfinite(garage.longitude)
@@ -94,8 +94,6 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "short_capacity": known_capacity(garage.short_capacity),
-        "long_capacity": known_capacity(garage.long_capacity),
         "accessible_capacity": None,
     }
     validate_record(record)
@@ -103,13 +101,19 @@ def catalog_record(garage: Garage) -> dict[str, object]:
 
 
 def observation_record(garage: Garage) -> dict[str, object]:
-    """Pass source time, state and counts on; core owns freshness policy."""
+    """Pass the operator's current values on; core owns freshness policy.
+
+    Capacity belongs here, not in the catalog: it changes during the day (seen at
+    the ArenA garages on 2026-09-28). Long-stay counts (season tickets) are not
+    delivered, because they say nothing to visitors.
+    """
     record = {
         "external_id": garage.garage_id,
         "observed_at": timestamp(garage.updated_at),
         "source_state": garage.state,
-        "short_available": available(garage.free_space_short, garage.short_capacity),
-        "long_available": available(garage.free_space_long, garage.long_capacity),
+        "status": garage.status.value if garage.status else None,
+        "capacity": known_capacity(garage.short_capacity),
+        "available": available(garage.free_space_short, garage.short_capacity),
         "accessible_available": None,
     }
     validate_observation(record)

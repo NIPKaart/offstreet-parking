@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from app.datasets import Dataset
     from app.records import Collection
 
-FORMAT = "nipkaart-offstreet-catalog-2"
+FORMAT = "nipkaart-offstreet-catalog-3"
 MAX_RECORDS = 10000
 MAX_BYTES = 32 * 1024 * 1024
 FETCH_TIMEOUT = 180

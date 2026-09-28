@@ -62,33 +62,20 @@ class CatalogTests(unittest.TestCase):
                 "source_name": "PR-123_ Example P+R (opendata)",
                 "facility_type": "park_and_ride",
                 "geometry": {"type": "Point", "coordinates": [4.9, 52.37]},
-                "short_capacity": 120,
-                "long_capacity": None,
                 "accessible_capacity": None,
             },
         )
-        self.assertEqual(catalog_record(garage(long_capacity=40))["long_capacity"], 40)
         row = record()
-        row["short_available"] = 27
+        row["capacity"] = 120
         with self.assertRaises(ValueError):
             validate_record(row)
-
-    def test_zero_capacity_placeholders_become_unknown(self) -> None:
-        """A malfunction or status-only P+R reports 0/0, not an empty garage."""
-        for state in ("error", "ok"):
-            with self.subTest(state=state):
-                result = catalog_record(
-                    garage(state=state, short_capacity=0, long_capacity=0)
-                )
-                self.assertIsNone(result["short_capacity"])
-                self.assertIsNone(result["long_capacity"])
 
     def test_live_changes_do_not_change_the_catalog(self) -> None:
         """Daily reviews compare metadata; time, counts and state are observations."""
         changed = catalog_record(
             garage(
                 free_space_short=0,
-                free_space_long=5,
+                short_capacity=900,
                 availability_pct=0,
                 state="closed",
                 updated_at=datetime(2026, 9, 29, tzinfo=UTC),
@@ -104,9 +91,6 @@ class CatalogTests(unittest.TestCase):
             {"longitude": True},
             {"garage_id": ""},
             {"garage_name": " "},
-            {"short_capacity": -1},
-            {"short_capacity": 1.5},
-            {"short_capacity": True},
             {"vehicle": VehicleType.BICYCLE},
         ):
             with (
@@ -161,7 +145,7 @@ class CatalogTests(unittest.TestCase):
                 first = json.loads(output.read_text())
                 asyncio.run(export_dataset("amsterdam", output))
                 second = json.loads(output.read_text())
-            self.assertEqual(first["format"], "nipkaart-offstreet-catalog-2")
+            self.assertEqual(first["format"], "nipkaart-offstreet-catalog-3")
             self.assertEqual(first["dataset"], "nl-amsterdam-garages")
             self.assertEqual(
                 first["source"], DATASETS["amsterdam"].description.as_dict()
@@ -211,7 +195,7 @@ class CatalogTests(unittest.TestCase):
         """A delivery must describe its own dataset and stay inside its area."""
         dataset = DATASETS["amsterdam"]
         payload = {
-            "format": "nipkaart-offstreet-catalog-2",
+            "format": "nipkaart-offstreet-catalog-3",
             "dataset": dataset.code,
             "delivery_id": "8dd5a15e-9491-4e8b-b07f-6f3fc063ff1e",
             "retrieved_at": "2026-09-28T00:00:00Z",
