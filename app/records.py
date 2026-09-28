@@ -46,60 +46,71 @@ def timestamp(value: datetime | None) -> str | None:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
+CATALOG_FIELDS = {
+    "external_id",
+    "name",
+    "source_name",
+    "facility_type",
+    "geometry",
+    "short_capacity",
+    "long_capacity",
+    "accessible_capacity",
+}
+OBSERVATION_FIELDS = {
+    "external_id",
+    "observed_at",
+    "source_state",
+    "short_available",
+    "long_available",
+    "accessible_available",
+}
+
+
 def validate_record(record: dict[str, Any]) -> None:
     """Validate the catalog-only wire format, including persisted retries."""
-    if set(record) != {
-        "external_id",
-        "name",
-        "source_name",
-        "facility_type",
-        "geometry",
-        "short_stay",
-        "long_stay",
-        "accessible",
-        "source_observed_at",
-    }:
+    if set(record) != CATALOG_FIELDS:
         message = "Unexpected catalog fields"
         raise ValueError(message)
     for field in ("external_id", "name", "source_name"):
-        if not isinstance(record[field], str) or not record[field].strip():
-            message = "Facility ID and name must be nonempty source strings"
-            raise ValueError(message)
+        validate_text(record[field])
     if record["facility_type"] not in ("garage", "park_and_ride"):
         message = "Unsupported facility type"
         raise ValueError(message)
     validate_geometry(record["geometry"])
-    for field in ("short_stay", "long_stay", "accessible"):
-        group = record[field]
-        if field == "long_stay" and group is None:
-            continue
-        validate_group(group, ("capacity",))
-    if record["source_observed_at"] is not None:
-        validate_timestamp(record["source_observed_at"])
+    validate_counts(record, ("short_capacity", "long_capacity", "accessible_capacity"))
 
 
-def validate_group(group: object, fields: tuple[str, ...]) -> None:
-    """Require exactly the given counts, preserving unknown and zero."""
-    if not isinstance(group, dict) or set(group) != set(fields):
-        message = f"Parking groups must contain exactly {', '.join(fields)}"
+def validate_observation(record: dict[str, Any]) -> None:
+    """Validate one observation: source identity, optional time and counts."""
+    if set(record) != OBSERVATION_FIELDS:
+        message = "Unexpected observation fields"
         raise ValueError(message)
+    validate_text(record["external_id"])
+    if record["source_state"] is not None:
+        validate_text(record["source_state"])
+    if record["observed_at"] is not None:
+        timestamp(datetime.fromisoformat(record["observed_at"]))
+    validate_counts(
+        record, ("short_available", "long_available", "accessible_available")
+    )
+
+
+def validate_text(value: object) -> None:
+    """Require a nonempty source string."""
+    if not isinstance(value, str) or not value.strip():
+        message = "Source IDs, names and states must be nonempty strings"
+        raise ValueError(message)
+
+
+def validate_counts(record: dict[str, Any], fields: tuple[str, ...]) -> None:
+    """Keep unknown (null) separate from zero; reject other values."""
     for field in fields:
-        value = group[field]
+        value = record[field]
         if value is not None and (
             isinstance(value, bool) or not isinstance(value, int) or value < 0
         ):
-            message = "Parking counts must be nonnegative integers or null"
+            message = f"{field} must be a nonnegative integer or null"
             raise ValueError(message)
-
-
-def validate_timestamp(value: object) -> datetime:
-    """Parse a persisted wire timestamp and require an explicit timezone."""
-    if not isinstance(value, str):
-        message = "Timestamps must be ISO 8601 strings"
-        raise TypeError(message)
-    parsed = datetime.fromisoformat(value)
-    timestamp(parsed)
-    return parsed
 
 
 def validate_geometry(geometry: dict[str, Any]) -> None:

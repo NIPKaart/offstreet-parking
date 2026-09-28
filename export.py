@@ -18,13 +18,10 @@ def main() -> None:
     parser.add_argument(
         "--kind", choices=("catalog", "observations"), default="catalog"
     )
-    parser.add_argument("--max-age-seconds", type=int, default=300)
     args = parser.parse_args()
     try:
         if args.kind == "observations":
-            count = asyncio.run(
-                export_observations(args.city, args.output, args.max_age_seconds)
-            )
+            count = asyncio.run(export_observations(args.city, args.output))
         else:
             count = asyncio.run(export_dataset(args.city, args.output))
     except (

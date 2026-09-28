@@ -55,8 +55,6 @@ services:
       - /app/collector.py
       - --kind
       - observations
-      - --max-age-seconds
-      - "${OBSERVATION_MAX_AGE_SECONDS:-300}"
     logging:
       driver: json-file
       options:

@@ -9,7 +9,6 @@ import io
 import json
 import tempfile
 import unittest
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -19,7 +18,8 @@ from botocore.response import StreamingBody
 from botocore.stub import Stubber
 
 from app.cities.netherlands.amsterdam import observation_record
-from collector import run_once, upload
+from app.export import encode
+from collector import deliver_observations, run_once, upload
 from tests.test_catalog import garage, record
 
 DATASET = "nl-amsterdam-garages"
@@ -205,143 +205,62 @@ class CollectorTests(unittest.TestCase):
 
 
 class ObservationCollectorTests(unittest.TestCase):
-    """Deliver live counts separately and never catch up on expired files."""
+    """Deliver live counts without local state; a failure simply skips a run."""
 
     def setUp(self) -> None:
-        """Build one small observation file and its time-ordered object key."""
+        """Use dummy credentials with botocore's in-process stub."""
         self.client = boto3.client(
             "s3",
             region_name="auto",
             aws_access_key_id="test",
             aws_secret_access_key="test",  # noqa: S106 - dummy SDK stub credentials
         )
-        self.fetched = datetime.now(UTC).replace(microsecond=0)
-        self.delivery_id = str(uuid4())
-        self.data = self.payload(self.fetched, self.delivery_id)
-        self.key = (
-            f"offstreet-observations/{DATASET}/"
-            f"{self.fetched:%Y%m%dT%H%M%SZ}-{self.delivery_id}.json"
-        )
-
-    def payload(self, fetched: datetime, delivery_id: str) -> bytes:
-        """Serialize an observation delivery exactly like the exporter."""
-        observation = observation_record(
-            garage(updated_at=fetched - timedelta(seconds=30)), fetched, 300
-        )
-        return (
-            json.dumps(
-                {
-                    "format": "nipkaart-offstreet-observations-1",
-                    "dataset": DATASET,
-                    "selection": "car-garages-and-pr",
-                    "delivery_id": delivery_id,
-                    "fetched_at": fetched.isoformat().replace("+00:00", "Z"),
-                    "max_age_seconds": 300,
-                    "source_count": 1,
-                    "records": [observation],
-                }
-            )
-            + "\n"
-        ).encode()
-
-    def parameters(self, key: str, data: bytes) -> dict[str, object]:
-        """Expect the same immutable, checksummed PUT as catalog delivery."""
-        return {
-            "Bucket": "test",
-            "Key": key,
-            "Body": data,
-            "ContentType": "application/json",
-            "ChecksumSHA256": base64.b64encode(hashlib.sha256(data).digest()).decode(
-                "ascii"
-            ),
-            "Metadata": {"sha256": hashlib.sha256(data).hexdigest()},
-            "IfNoneMatch": "*",
+        self.payload = {
+            "format": "nipkaart-offstreet-observations-1",
+            "dataset": DATASET,
+            "selection": "car-garages-and-pr",
+            "delivery_id": str(uuid4()),
+            "fetched_at": "2026-09-28T09:01:11.123456Z",
+            "source_count": 1,
+            "records": [observation_record(garage())],
         }
 
-    def test_fetch_uploads_to_separate_time_ordered_prefix(self) -> None:
-        """Observations never share catalog state, keys or validation."""
-
-        async def observe(_city: str, path: Path, max_age: int) -> None:
-            self.assertEqual(max_age, 120)
-            path.write_bytes(self.data)  # noqa: ASYNC240 - tiny local test input
-
-        with tempfile.TemporaryDirectory() as directory, Stubber(self.client) as stub:
-            root = Path(directory)
-            stub.add_response("put_object", {}, self.parameters(self.key, self.data))
-            with (
-                patch("collector.export_observations", side_effect=observe),
-                patch("collector.export_dataset", new_callable=AsyncMock) as catalog,
-            ):
-                self.assertEqual(
-                    run_once(
-                        self.client, "test", root, kind="observations", max_age=120
-                    ),
-                    self.key,
-                )
-                catalog.assert_not_awaited()
-            path = root / DATASET / "observations"
-            self.assertEqual((path / "last.json").read_bytes(), self.data)
-            self.assertFalse((root / DATASET / "last.json").exists())
-            stub.assert_no_pending_responses()
-
-    def test_fresh_pending_is_retried_without_fetching(self) -> None:
-        """A recent failed upload keeps its identity like a catalog delivery."""
-        with tempfile.TemporaryDirectory() as directory, Stubber(self.client) as stub:
-            root = Path(directory)
-            path = root / DATASET / "observations"
-            path.mkdir(parents=True)
-            (path / "pending.json").write_bytes(self.data)
-            stub.add_response("put_object", {}, self.parameters(self.key, self.data))
+    def test_fetch_uploads_to_time_ordered_prefix(self) -> None:
+        """Observation keys never collide with or list among catalog deliveries."""
+        data = encode(self.payload)
+        key = (
+            f"offstreet-observations/{DATASET}/"
+            f"20260928T090111Z-{self.payload['delivery_id']}.json"
+        )
+        with Stubber(self.client) as stub:
+            stub.add_response(
+                "put_object",
+                {},
+                {
+                    "Bucket": "test",
+                    "Key": key,
+                    "Body": data,
+                    "ContentType": "application/json",
+                    "ChecksumSHA256": base64.b64encode(
+                        hashlib.sha256(data).digest()
+                    ).decode("ascii"),
+                    "Metadata": {"sha256": hashlib.sha256(data).hexdigest()},
+                    "IfNoneMatch": "*",
+                },
+            )
             with patch(
-                "collector.export_observations", new_callable=AsyncMock
-            ) as fetch:
-                run_once(self.client, "test", root, kind="observations")
-                fetch.assert_not_awaited()
-            stub.assert_no_pending_responses()
-
-    def test_expired_pending_is_replaced_by_a_new_fetch(self) -> None:
-        """Old measurements are dropped rather than uploaded late."""
-        old = self.payload(self.fetched - timedelta(seconds=300), str(uuid4()))
-
-        async def observe(_city: str, path: Path, _max_age: int) -> None:
-            path.write_bytes(self.data)  # noqa: ASYNC240 - tiny local test input
-
-        with tempfile.TemporaryDirectory() as directory, Stubber(self.client) as stub:
-            root = Path(directory)
-            path = root / DATASET / "observations"
-            path.mkdir(parents=True)
-            (path / "pending.json").write_bytes(old)
-            stub.add_response("put_object", {}, self.parameters(self.key, self.data))
-            with patch("collector.export_observations", side_effect=observe):
-                self.assertEqual(
-                    run_once(self.client, "test", root, kind="observations"),
-                    self.key,
-                )
-            self.assertEqual((path / "last.json").read_bytes(), self.data)
+                "collector.collect_observations",
+                new_callable=AsyncMock,
+                return_value=self.payload,
+            ):
+                self.assertEqual(deliver_observations(self.client, "test"), key)
             stub.assert_no_pending_responses()
 
     def test_failed_fetch_publishes_nothing(self) -> None:
-        """A source failure leaves no pending file and makes no request."""
-        with tempfile.TemporaryDirectory() as directory, Stubber(self.client):
-            root = Path(directory)
-            with (
-                patch("collector.export_observations", side_effect=TimeoutError),
-                self.assertRaises(TimeoutError),
-            ):
-                run_once(self.client, "test", root, kind="observations")
-            self.assertEqual(list((root / DATASET / "observations").glob("*.json")), [])
-
-    def test_streams_reject_each_others_files(self) -> None:
-        """A catalog cannot be uploaded as observations, nor the reverse."""
-        catalog = CollectorTests("setUp")
-        catalog.setUp()
-        for kind, data in (("observations", catalog.data), ("catalog", self.data)):
-            with (
-                self.subTest(kind=kind),
-                tempfile.TemporaryDirectory() as directory,
-                Stubber(self.client),
-            ):
-                pending = Path(directory) / "pending.json"
-                pending.write_bytes(data)
-                with self.assertRaises((ValueError, KeyError)):
-                    upload(self.client, "test", pending, kind=kind)
+        """A source failure makes no bucket request."""
+        with (
+            Stubber(self.client),
+            patch("collector.collect_observations", side_effect=TimeoutError),
+            self.assertRaises(TimeoutError),
+        ):
+            deliver_observations(self.client, "test")

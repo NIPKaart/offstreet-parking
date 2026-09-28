@@ -1,13 +1,19 @@
 """Python script for Garages Amsterdam data."""
 
 import math
-from datetime import datetime, timedelta
 
 from odp_amsterdam import Garage, ODPAmsterdam
 from odp_amsterdam.exceptions import ODPAmsterdamError
 
 from app.cities import City
-from app.records import Collection, SourceError, capacity, timestamp, validate_record
+from app.records import (
+    Collection,
+    SourceError,
+    capacity,
+    timestamp,
+    validate_observation,
+    validate_record,
+)
 
 
 class Municipality(City):
@@ -40,12 +46,10 @@ class Municipality(City):
         records.sort(key=lambda record: record["external_id"])
         return Collection(records, len(records), 1, complete=True)
 
-    async def observe(self, fetched_at: datetime, max_age: int) -> Collection:
-        """Collect point-in-time capacity and availability separately from metadata."""
+    async def observe(self) -> Collection:
+        """Collect dated free spaces separately from metadata."""
         garages = await fetch_car_garages()
-        records = [
-            observation_record(garage, fetched_at, max_age) for garage in garages
-        ]
+        records = [observation_record(garage) for garage in garages]
         records.sort(key=lambda record: record["external_id"])
         return Collection(records, len(records), 1, complete=True)
 
@@ -80,46 +84,23 @@ def catalog_record(garage: Garage) -> dict[str, object]:
             "type": "Point",
             "coordinates": [garage.longitude, garage.latitude],
         },
-        "short_stay": {"capacity": capacity(garage.short_capacity)},
-        "long_stay": {"capacity": capacity(garage.long_capacity)}
-        if garage.long_capacity is not None
-        else None,
-        "accessible": {"capacity": None},
-        "source_observed_at": timestamp(garage.updated_at),
+        "short_capacity": capacity(garage.short_capacity),
+        "long_capacity": capacity(garage.long_capacity),
+        "accessible_capacity": None,
     }
     validate_record(record)
     return record
 
 
-def observation_record(
-    garage: Garage, fetched_at: datetime, max_age: int
-) -> dict[str, object]:
-    """Keep dated source counts distinct from facility and accessible availability."""
-    catalog_record(garage)
-    observed_at = garage.updated_at
-    valid_until = observed_at + timedelta(seconds=max_age) if observed_at else None
-    status = "unavailable"
-    if garage.state == "ok" and observed_at and observed_at <= fetched_at:
-        status = "current" if valid_until > fetched_at else "stale"
-    return {
+def observation_record(garage: Garage) -> dict[str, object]:
+    """Pass source time, state and counts on; core owns freshness policy."""
+    record = {
         "external_id": garage.garage_id,
-        "observed_at": timestamp(observed_at),
-        "valid_until": timestamp(valid_until),
-        "status": status,
+        "observed_at": timestamp(garage.updated_at),
         "source_state": garage.state,
-        "short_stay": {
-            "capacity": capacity(garage.short_capacity),
-            "available": capacity(garage.free_space_short)
-            if status != "unavailable"
-            else None,
-        },
-        "long_stay": {
-            "capacity": capacity(garage.long_capacity),
-            "available": capacity(garage.free_space_long)
-            if status != "unavailable"
-            else None,
-        }
-        if garage.long_capacity is not None or garage.free_space_long is not None
-        else None,
-        "accessible": {"capacity": None, "available": None},
+        "short_available": capacity(garage.free_space_short),
+        "long_available": capacity(garage.free_space_long),
+        "accessible_available": None,
     }
+    validate_observation(record)
+    return record

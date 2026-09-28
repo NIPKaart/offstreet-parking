@@ -9,7 +9,7 @@ import fcntl
 import hashlib
 import json
 import os
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -19,9 +19,9 @@ from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from app.datasets import DATASETS
-from app.export import MAX_BYTES, export_dataset, validate_payload
-from app.observations import expired, export_observations, validate_observations
-from app.records import SourceError, validate_timestamp
+from app.export import MAX_BYTES, encode, export_dataset, validate_payload
+from app.observations import collect_observations
+from app.records import SourceError
 
 if TYPE_CHECKING:
     from botocore.client import BaseClient
@@ -30,43 +30,8 @@ if TYPE_CHECKING:
 KINDS = ("catalog", "observations")
 
 
-def read_pending(pending: Path, city: str, kind: str) -> tuple[bytes, dict]:
-    """Read and validate persisted bytes exactly as they will be uploaded."""
-    with pending.open("rb") as stream:
-        data = stream.read(MAX_BYTES + 1)
-    if len(data) > MAX_BYTES:
-        message = "Pending delivery exceeds 32 MiB"
-        raise ValueError(message)
-    payload = json.loads(data)
-    if kind == "observations":
-        validate_observations(payload, DATASETS[city])
-    else:
-        validate_payload(payload, DATASETS[city])
-    return data, payload
-
-
-def object_key(payload: dict, kind: str) -> str:
-    """Separate streams by prefix; order observation keys by retrieval time."""
-    delivery_id = str(UUID(payload["delivery_id"]))
-    if kind == "observations":
-        fetched_at = validate_timestamp(payload["fetched_at"]).astimezone(UTC)
-        return (
-            f"offstreet-observations/{payload['dataset']}/"
-            f"{fetched_at:%Y%m%dT%H%M%SZ}-{delivery_id}.json"
-        )
-    return f"offstreet/{payload['dataset']}/{delivery_id}.json"
-
-
-def upload(
-    client: BaseClient,
-    bucket: str,
-    pending: Path,
-    city: str = "amsterdam",
-    kind: str = "catalog",
-) -> str:
-    """Create an immutable delivery; verify matching bytes after an uncertain PUT."""
-    data, payload = read_pending(pending, city, kind)
-    key = object_key(payload, kind)
+def put(client: BaseClient, bucket: str, key: str, data: bytes) -> None:
+    """Create an immutable object; verify matching bytes after an uncertain PUT."""
     digest = hashlib.sha256(data).hexdigest()
     print(f"Uploading {key} sha256={digest}", flush=True)
     try:
@@ -90,47 +55,59 @@ def upload(
         if existing != data:
             message = "Remote delivery identity already exists with different bytes"
             raise ValueError(message) from error
+
+
+def upload(
+    client: BaseClient, bucket: str, pending: Path, city: str = "amsterdam"
+) -> str:
+    """Validate the persisted catalog and upload exactly those bytes."""
+    with pending.open("rb") as stream:
+        data = stream.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
+        message = "Pending delivery exceeds 32 MiB"
+        raise ValueError(message)
+    payload = json.loads(data)
+    validate_payload(payload, DATASETS[city])
+    key = f"offstreet/{payload['dataset']}/{UUID(payload['delivery_id'])}.json"
+    put(client, bucket, key, data)
     return key
 
 
-def run_once(  # noqa: PLR0913 - two independent stream options
-    client: BaseClient,
-    bucket: str,
-    directory: Path,
-    city: str = "amsterdam",
-    *,
-    kind: str = "catalog",
-    max_age: int = 300,
+def run_once(
+    client: BaseClient, bucket: str, directory: Path, city: str = "amsterdam"
 ) -> str:
-    """Retry a pending catalog until acknowledged; expire pending observations."""
+    """Keep the pending catalog until acknowledged; never fetch its replacement."""
     dataset = DATASETS[city]
     directory = directory / dataset.code
-    if kind == "observations":
-        directory /= "observations"
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / "delivery.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         pending = directory / "pending.json"
-        if (
-            kind == "observations"
-            and pending.exists()
-            and expired(read_pending(pending, city, kind)[1], datetime.now(UTC))
-        ):
-            pending.unlink()
-            print("Discarded expired pending observations", flush=True)
         if not pending.exists():
             for temporary in directory.glob(".parking-*.tmp"):
                 temporary.unlink()
-            if kind == "observations":
-                asyncio.run(export_observations(city, pending, max_age))
-            else:
-                asyncio.run(export_dataset(city, pending))
+            asyncio.run(export_dataset(city, pending))
         sync_directory(directory)
-        key = upload(client, bucket, pending, city, kind)
+        key = upload(client, bucket, pending, city)
         pending.replace(directory / "last.json")
         sync_directory(directory)
         print(f"Delivered {key}", flush=True)
         return key
+
+
+def deliver_observations(
+    client: BaseClient, bucket: str, city: str = "amsterdam"
+) -> str:
+    """Fetch and upload once; on failure nothing is kept, the next run is newer."""
+    payload = asyncio.run(collect_observations(city))
+    fetched_at = datetime.fromisoformat(payload["fetched_at"])
+    key = (
+        f"offstreet-observations/{payload['dataset']}/"
+        f"{fetched_at:%Y%m%dT%H%M%SZ}-{payload['delivery_id']}.json"
+    )
+    put(client, bucket, key, encode(payload))
+    print(f"Delivered {key}", flush=True)
+    return key
 
 
 def sync_directory(directory: Path) -> None:
@@ -148,7 +125,6 @@ def main() -> None:
     parser.add_argument("--directory", type=Path, default=Path("/data"))
     parser.add_argument("--city", choices=DATASETS, default="amsterdam")
     parser.add_argument("--kind", choices=KINDS, default="catalog")
-    parser.add_argument("--max-age-seconds", type=int, default=300)
     args = parser.parse_args()
     try:
         endpoint = os.environ["R2_ENDPOINT"]
@@ -169,14 +145,10 @@ def main() -> None:
                 response_checksum_validation="when_required",
             ),
         )
-        run_once(
-            client,
-            bucket,
-            args.directory,
-            args.city,
-            kind=args.kind,
-            max_age=args.max_age_seconds,
-        )
+        if args.kind == "observations":
+            deliver_observations(client, bucket, args.city)
+        else:
+            run_once(client, bucket, args.directory, args.city)
     except (
         BotoCoreError,
         ClientError,
@@ -187,7 +159,7 @@ def main() -> None:
         KeyError,
     ) as error:
         parser.exit(
-            1, f"Collector failed ({type(error).__name__}); pending file retained\n"
+            1, f"Collector failed ({type(error).__name__}); nothing new delivered\n"
         )
 
 

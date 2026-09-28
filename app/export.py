@@ -96,12 +96,18 @@ def write_records(
     return len(records)
 
 
-def write_payload(payload: dict, output: Path) -> None:
-    """Share bounded atomic file completion across catalog and observation exports."""
+def encode(payload: dict) -> bytes:
+    """Serialize one bounded delivery exactly as it is written and uploaded."""
     data = (json.dumps(payload, ensure_ascii=False, allow_nan=False) + "\n").encode()
     if len(data) > MAX_BYTES:
         msg = "Delivery exceeds the 32 MiB pilot limit"
         raise ValueError(msg)
+    return data
+
+
+def write_payload(payload: dict, output: Path) -> None:
+    """Complete a local file atomically so a failure keeps the previous one."""
+    data = encode(payload)
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(

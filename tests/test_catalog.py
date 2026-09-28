@@ -52,56 +52,39 @@ def record() -> dict[str, object]:
 class CatalogTests(unittest.TestCase):
     """Keep catalog claims separate from live or inferred accessibility claims."""
 
-    def test_identity_location_capacity_and_original_date_are_preserved(self) -> None:
+    def test_identity_location_and_capacity_are_preserved(self) -> None:
         """Source IDs remain stable and unknown values never become zero."""
-        result = record()
-        self.assertEqual(result["external_id"], "source-original-ID")
-        self.assertEqual(result["name"], "Example P+R")
-        self.assertEqual(result["source_name"], "PR-123_ Example P+R (opendata)")
-        self.assertEqual(result["facility_type"], "park_and_ride")
         self.assertEqual(
-            result["geometry"], {"type": "Point", "coordinates": [4.9, 52.37]}
+            record(),
+            {
+                "external_id": "source-original-ID",
+                "name": "Example P+R",
+                "source_name": "PR-123_ Example P+R (opendata)",
+                "facility_type": "park_and_ride",
+                "geometry": {"type": "Point", "coordinates": [4.9, 52.37]},
+                "short_capacity": 120,
+                "long_capacity": None,
+                "accessible_capacity": None,
+            },
         )
-        self.assertEqual(result["short_stay"], {"capacity": 120})
-        self.assertIsNone(result["long_stay"])
-        self.assertEqual(result["accessible"], {"capacity": None})
-        self.assertEqual(result["source_observed_at"], "2026-09-28T00:00:00Z")
-        self.assertNotIn("metadata_updated_at", result)
-
-    def test_catalog_keeps_optional_capacity_without_live_fields(self) -> None:
-        """Missing capacity stays unknown; zero is a supplied capacity."""
-        self.assertEqual(
-            catalog_record(garage(long_capacity=0))["long_stay"], {"capacity": 0}
-        )
-        self.assertEqual(
-            catalog_record(garage(long_capacity=40))["long_stay"], {"capacity": 40}
-        )
-        self.assertEqual(
-            catalog_record(garage(short_capacity=None))["short_stay"],
-            {"capacity": None},
-        )
+        self.assertEqual(catalog_record(garage(long_capacity=0))["long_capacity"], 0)
         row = record()
-        row["short_stay"]["available"] = 27
+        row["short_available"] = 27
         with self.assertRaises(ValueError):
             validate_record(row)
 
     def test_live_changes_do_not_change_the_catalog(self) -> None:
-        """Daily reviews compare metadata; free spaces and state are observations."""
+        """Daily reviews compare metadata; time, counts and state are observations."""
         changed = catalog_record(
             garage(
                 free_space_short=0,
                 free_space_long=5,
                 availability_pct=0,
                 state="closed",
+                updated_at=datetime(2026, 9, 29, tzinfo=UTC),
             )
         )
-        unchanged = record()
-        del changed["source_observed_at"], unchanged["source_observed_at"]
-        self.assertEqual(changed, unchanged)
-        self.assertEqual(
-            catalog_record(garage(short_capacity=0))["short_stay"]["capacity"],
-            0,
-        )
+        self.assertEqual(changed, record())
 
     def test_invalid_source_claims_fail_closed(self) -> None:
         """Refuse swapped coordinates, lossy counts, missing IDs and naive dates."""
@@ -115,7 +98,6 @@ class CatalogTests(unittest.TestCase):
             {"short_capacity": 1.5},
             {"short_capacity": True},
             {"vehicle": VehicleType.BICYCLE},
-            {"updated_at": datetime(2026, 9, 28, tzinfo=None)},  # noqa: DTZ001 - invalid source
         ):
             with (
                 self.subTest(changes=changes),

@@ -9,7 +9,6 @@ from app.cities.netherlands import amsterdam
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from datetime import datetime
 
     from app.records import Collection
 
@@ -20,8 +19,8 @@ class Source(Protocol):
     async def collect(self) -> Collection:
         """Retrieve a complete selection or raise without delivering partial data."""
 
-    async def observe(self, fetched_at: datetime, max_age: int) -> Collection:
-        """Retrieve observations with an explicit local freshness policy."""
+    async def observe(self) -> Collection:
+        """Retrieve dated observations for the same facility identities."""
 
 
 @dataclass(frozen=True)

@@ -1,98 +1,71 @@
-"""Exercise freshness and failure boundaries for the separate live export."""
+"""Exercise the observation mapping and its failure boundaries."""
 
 import asyncio
 import json
 import tempfile
 import unittest
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from app.cities.netherlands.amsterdam import Municipality, observation_record
 from app.datasets import DATASETS
 from app.export import validate_payload
-from app.observations import export_observations, validate_observation
-from app.records import Collection
+from app.observations import collect_observations, export_observations
+from app.records import Collection, validate_observation
 from tests.test_catalog import garage
-
-FETCHED = datetime(2026, 9, 28, 0, 1, tzinfo=UTC)
 
 
 class ObservationTests(unittest.TestCase):
-    """Keep zero, unknown, historical and unavailable observations distinct."""
+    """Pass source values on; keep zero, unknown and accessibility distinct."""
 
-    def test_current_counts_keep_unknown_and_zero_distinct(self) -> None:
-        """Retain source categories without adding them or implying accessibility."""
-        record = observation_record(garage(free_space_short=0), FETCHED, 300)
-        self.assertEqual(record["external_id"], "source-original-ID")
-        self.assertEqual(record["status"], "current")
-        self.assertEqual(record["observed_at"], "2026-09-28T00:00:00Z")
-        self.assertEqual(record["valid_until"], "2026-09-28T00:05:00Z")
-        self.assertEqual(record["short_stay"], {"capacity": 120, "available": 0})
-        self.assertIsNone(record["long_stay"])
-        self.assertEqual(record["accessible"], {"capacity": None, "available": None})
+    def test_source_time_state_and_counts_are_passed_on(self) -> None:
+        """Core decides freshness, so the collector adds no status or expiry."""
+        record = observation_record(
+            garage(free_space_short=0, free_space_long=12, state="closed")
+        )
+        self.assertEqual(
+            record,
+            {
+                "external_id": "source-original-ID",
+                "observed_at": "2026-09-28T00:00:00Z",
+                "source_state": "closed",
+                "short_available": 0,
+                "long_available": 12,
+                "accessible_available": None,
+            },
+        )
 
-    def test_optional_long_stay_keeps_partial_data_and_zero(self) -> None:
-        """Only absent source data omits the group; zero is a known count."""
-        for total, available in ((40, 12), (None, 12), (40, None), (0, 0)):
-            with self.subTest(total=total, available=available):
-                record = observation_record(
-                    garage(long_capacity=total, free_space_long=available), FETCHED, 300
-                )
-                self.assertEqual(
-                    record["long_stay"], {"capacity": total, "available": available}
-                )
-                self.assertEqual(
-                    record["short_stay"], {"capacity": 120, "available": 27}
-                )
+    def test_unknown_values_stay_unknown(self) -> None:
+        """Missing time or counts never become zero or a fetch time."""
+        record = observation_record(
+            garage(updated_at=None, free_space_short=None, state=None)
+        )
+        self.assertIsNone(record["observed_at"])
+        self.assertIsNone(record["source_state"])
+        self.assertIsNone(record["short_available"])
+        self.assertIsNone(record["long_available"])
 
-    def test_expired_measurement_is_historical_at_the_exact_boundary(self) -> None:
-        """Never refresh an observation's expiry merely by fetching it again."""
-        for fetched in (FETCHED + timedelta(minutes=4), FETCHED + timedelta(days=1)):
-            with self.subTest(fetched=fetched):
-                record = observation_record(garage(), fetched, 300)
-                self.assertEqual(record["status"], "stale")
-                self.assertEqual(record["short_stay"]["available"], 27)
-                self.assertEqual(record["valid_until"], "2026-09-28T00:05:00Z")
-
-    def test_unusable_source_observations_do_not_claim_free_spaces(self) -> None:
-        """An error, missing clock or future clock cannot claim current availability."""
-        for changes in (
-            {"state": "closed"},
-            {"state": "error"},
-            {"updated_at": None},
-            {"updated_at": FETCHED + timedelta(seconds=1)},
-        ):
-            with self.subTest(changes=changes):
-                record = observation_record(
-                    garage(long_capacity=40, free_space_long=12, **changes),
-                    FETCHED,
-                    300,
-                )
-                self.assertEqual(record["status"], "unavailable")
-                self.assertEqual(
-                    record["long_stay"], {"capacity": 40, "available": None}
-                )
-                self.assertIsNone(record["short_stay"]["available"])
-                self.assertIsNone(record["accessible"]["available"])
-
-    def test_invalid_counts_and_timestamps_fail_closed(self) -> None:
+    def test_invalid_source_values_fail_closed(self) -> None:
         """Reject lossy, negative or timezone-free source values."""
         for changes in (
             {"free_space_short": -1},
             {"free_space_long": True},
             {"free_space_short": 1.5},
+            {"garage_id": ""},
             {"updated_at": datetime(2026, 9, 28, tzinfo=None)},  # noqa: DTZ001
         ):
             with (
                 self.subTest(changes=changes),
                 self.assertRaises((ValueError, TypeError)),
             ):
-                observation_record(garage(**changes), FETCHED, 300)
+                observation_record(garage(**changes))
+        with self.assertRaises(ValueError):
+            validate_observation(
+                {**observation_record(garage()), "accessible_capacity": None}
+            )
 
-    def test_live_export_uses_car_selection_and_cannot_be_uploaded_as_catalog(
-        self,
-    ) -> None:
+    def test_export_uses_car_selection_and_cannot_pass_as_catalog(self) -> None:
         """The two streams share source identity but have different contracts."""
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "observations.json"
@@ -108,16 +81,16 @@ class ObservationTests(unittest.TestCase):
             payload = json.loads(output.read_text())
             self.assertEqual(payload["format"], "nipkaart-offstreet-observations-1")
             self.assertEqual(payload["dataset"], "nl-amsterdam-garages")
-            self.assertEqual(payload["max_age_seconds"], 300)
             self.assertEqual([r["external_id"] for r in payload["records"]], ["a", "z"])
-            with self.assertRaises(ValueError):
+            self.assertLessEqual(
+                datetime.fromisoformat(payload["fetched_at"]), datetime.now(UTC)
+            )
+            with self.assertRaises((ValueError, KeyError)):
                 validate_payload(payload, DATASETS["amsterdam"])
 
-    def test_incomplete_selection_and_invalid_age_preserve_previous_export(
-        self,
-    ) -> None:
-        """A broken fetch cannot erase the last complete observation artifact."""
-        record = observation_record(garage(), FETCHED, 300)
+    def test_incomplete_selection_is_rejected(self) -> None:
+        """A broken fetch cannot become a delivery."""
+        record = observation_record(garage())
         for result in (
             Collection([], 0, 1, complete=True),
             Collection([record], 1, 1, complete=False),
@@ -126,32 +99,8 @@ class ObservationTests(unittest.TestCase):
         ):
             with (
                 self.subTest(result=result),
-                tempfile.TemporaryDirectory() as directory,
+                patch.object(Municipality, "observe", new_callable=AsyncMock) as fetch,
             ):
-                output = Path(directory) / "observations.json"
-                output.write_bytes(b"last good")
-                with patch.object(
-                    Municipality, "observe", new_callable=AsyncMock
-                ) as fetch:
-                    fetch.return_value = result
-                    with self.assertRaises(ValueError):
-                        asyncio.run(export_observations("amsterdam", output))
-                    for age in (0, -1, True):
-                        with self.assertRaises(ValueError):
-                            asyncio.run(export_observations("amsterdam", output, age))
-                self.assertEqual(output.read_bytes(), b"last good")
-
-    def test_persisted_records_cannot_claim_impossible_availability(self) -> None:
-        """Edited or corrupt pending files fail before reaching the bucket."""
-        valid = observation_record(garage(), FETCHED, 300)
-        validate_observation(valid)
-        for changes in (
-            {"status": "unavailable"},
-            {"observed_at": None, "valid_until": None},
-            {"valid_until": valid["observed_at"]},
-            {"status": "open"},
-            {"accessible": {"capacity": None}},
-            {"short_stay": {"capacity": 120, "available": -1}},
-        ):
-            with self.subTest(changes=changes), self.assertRaises(ValueError):
-                validate_observation({**valid, **changes})
+                fetch.return_value = result
+                with self.assertRaises(ValueError):
+                    asyncio.run(collect_observations("amsterdam"))
