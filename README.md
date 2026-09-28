@@ -97,7 +97,7 @@ uv run python export.py --city amsterdam --kind observations --output /tmp/obser
 
 ## R2 delivery
 
-Deliver to the existing private EU bucket `nipkaart-imports`, next to the municipal collector's `municipal/` prefix. Create a separate token for this collector with Object Read & Write access, scoped to that bucket only, and enter it in `.env` (see `.env.example`). R2 tokens cannot be limited to a prefix, so this token could technically overwrite `municipal/` objects; the collector itself never overwrites. Core reads with its existing credentials.
+Deliver to the existing private EU bucket `nipkaart-imports`, next to the municipal collector's `municipal/` prefix. Reuse the municipal collector's R2 token (Object Read & Write, scoped to that bucket) and enter it in `.env` (see `.env.example`). The collector itself never overwrites or deletes objects. Core reads with its existing credentials.
 
 ```bash
 uv run --env-file .env python collector.py --city amsterdam --directory /tmp/offstreet
