@@ -28,7 +28,7 @@ Collect Amsterdam car garages and P+R for [NIPKaart][nipkaart] as two separate s
 | Catalog ([#656](https://github.com/NIPKaart/offstreet-parking/issues/656)) | Identity, name, type, location, capacity | Daily | `offstreet/<dataset>/<delivery_id>.json` | [core#1250](https://github.com/NIPKaart/core/issues/1250): review and publication |
 | Observations ([#657](https://github.com/NIPKaart/offstreet-parking/issues/657)) | Source time, state, free spaces | Every 2 minutes | `offstreet-observations/<dataset>/<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` | [core#1221](https://github.com/NIPKaart/core/issues/1221): live update |
 
-Both formats are contract candidates until core accepts them.
+Core accepts both formats (`nipkaart-offstreet-catalog-3` and `nipkaart-offstreet-observations-2`); see the [core delivery contract](https://github.com/NIPKaart/core/blob/main/docs/development/data-import-contract.md).
 
 ## Development
 
@@ -40,7 +40,7 @@ uv run python -m unittest discover -s tests -v
 uv run pre-commit run --all-files
 ```
 
-Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasnicolaas/python-odp-amsterdam) package (`>=7.0.2,<7.1.0`); this repository only selects car facilities and maps them. `main.py --fetch amsterdam|hamburg` is the legacy inspection command. It prints a count and writes nothing.
+Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasnicolaas/python-odp-amsterdam) package (`>=7.1.0,<7.2.0`); this repository only selects car facilities and maps them. `main.py --fetch amsterdam|hamburg` is the legacy inspection command. It prints a count and writes nothing.
 
 ## Formats
 
