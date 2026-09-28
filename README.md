@@ -21,63 +21,129 @@
 
 ## About
 
-Prepare offstreet source collection for [NIPKaart][nipkaart]. Existing source clients can be inspected locally; catalog mapping and delivery follow in #656.
+Collect Amsterdam car garages and P+R for [NIPKaart][nipkaart] as two separate streams, delivered as JSON files to a private Cloudflare R2 bucket. Core picks them up from there. This collector has no core API or database credentials.
 
-## Existing source clients
+| Stream | Content | Cadence | R2 key | Core |
+| --- | --- | --- | --- | --- |
+| Catalog ([#656](https://github.com/NIPKaart/offstreet-parking/issues/656)) | Identity, name, type, location, capacity | Daily | `offstreet/<dataset>/<delivery_id>.json` | [core#1250](https://github.com/NIPKaart/core/issues/1250): review and publication |
+| Observations ([#657](https://github.com/NIPKaart/offstreet-parking/issues/657)) | Source time, state, free spaces | Every 2 minutes | `offstreet-observations/<dataset>/<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` | [core#1221](https://github.com/NIPKaart/core/issues/1221): live update |
 
-| Country | City | Type |
-| --- | --- | --- |
-| Netherlands | [Amsterdam](https://github.com/klaasnicolaas/python-garages-amsterdam) | Parking garages |
-| Germany | [Hamburg](https://github.com/klaasnicolaas/python-hamburg) | Park and rides |
+Both formats are contract candidates until core accepts them.
 
 ## Development
 
-Use Python 3.14 and [uv](https://docs.astral.sh/uv/), matching the municipal collector tooling. `uv.lock` replaces `poetry.lock`, preserving the versions and ranges of retained dependencies. The unused PyMySQL and python-dotenv dependencies are removed. CI and Docker enforce the lockfile.
+Use Python 3.14 and [uv](https://docs.astral.sh/uv/):
 
 ```bash
 uv sync --locked --python 3.14
-uv lock --check
-uv run python main.py --help
 uv run python -m unittest discover -s tests -v
 uv run pre-commit run --all-files
 ```
 
-No `.env`, core API credentials or database credentials are needed for installation, help or offline tests. Running `main.py` without arguments prints help and exits. Install local Git hooks with `uv run pre-commit install` if desired. CI runs the same offline tests, lockfile check, Ruff, Pylint, YAML and file checks.
+Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasnicolaas/python-odp-amsterdam) package (`>=7.0.2,<7.1.0`); this repository only selects car facilities and maps them. `main.py --fetch amsterdam|hamburg` is the legacy inspection command. It prints a count and writes nothing.
 
-To inspect an existing source once (outbound provider access required):
+## Formats
 
-```bash
-uv run python main.py --fetch amsterdam
-uv run python main.py --fetch hamburg
+Both envelopes contain `format`, `dataset` (`nl-amsterdam-garages`), `selection` (`car-garages-and-pr`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at` and `complete: true`; observations add `fetched_at`. Timestamps are UTC ISO 8601.
+
+Catalog record (`nipkaart-offstreet-catalog-1`):
+
+```json
+{
+  "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
+  "name": "Byzantium",
+  "source_name": "P-106_ Byzantium (opendata)",
+  "facility_type": "garage",
+  "geometry": {"type": "Point", "coordinates": [4.88001, 52.3619]},
+  "short_capacity": 446,
+  "long_capacity": null,
+  "accessible_capacity": null
+}
 ```
 
-These commands print only a record count and exit, without loading `.env`, connecting to MySQL, writing files or uploading data. Provider failures exit unsuccessfully. They are source smoke checks, not a catalog export or evidence that a source is complete or suitable for publication. Offline tests replace package clients and never contact live providers.
+Observation record (`nipkaart-offstreet-observations-1`):
 
-## Repository inventory and collector boundary
-
-| Area | Retained behavior and limitations |
-| --- | --- |
-| Entrypoint | `main.py` defaults to help and provides a finite `--fetch` command. The old continuous writer and polling schedule are removed. |
-| Universal source packages | Locked `odp-amsterdam` 6.1.2 and `hamburg` 3.0.1 own HTTP access, parsing and source models. Source parsing and parser fixtures belong upstream. |
-| NIPKaart wrappers | `app/cities/netherlands/amsterdam.py` and `app/cities/germany/hamburg.py` retain their existing package calls. Hamburg requests at most 40 park-and-rides; completeness is unverified. Source objects are returned without legacy database mapping. |
-| Removed database coupling | Both `upload_data` methods previously upserted into MySQL `parking_offstreet`; importing `app.database` opened a connection. Those methods, the connection/delete helpers, coordinate-derived IDs, country/province database IDs and unknown-to-zero mapping are removed. |
-| Runtime and dependencies | Python 3.14 is the baseline for local development, CI and Docker; retained package versions are unchanged. Standard project metadata, uv, default `cities`/`dev` groups and locked installation follow disabled-parking#779. Docker includes `uv.lock`, pins uv and uses Bookworm instead of Buster. `.env` and local virtual environments are excluded. |
-| Deployment definitions | The old Compose/Swarm definitions and credential template are removed. Docker now defaults to offline help. This revision does not update or stop any running deployment. |
-
-This follows [disabled-parking#779](https://github.com/NIPKaart/disabled-parking/pull/779) for tooling and [#780](https://github.com/NIPKaart/disabled-parking/pull/780) for removing the SQL runtime while preserving reusable source clients. NIPKaart source selection, mapping and future transport remain here. No shared framework is introduced.
-
-Catalog source verification, stable source IDs, capacity semantics, mapping examples, the bounded JSON delivery and private R2 transfer belong to #656 with NIPKaart/core#1250. No adapter, second transport format, core intake or live occupancy (#657) is implemented here. General free capacity does not establish accessible-space availability.
-
-## Container smoke check
-
-```bash
-docker build -t nipkaart-offstreet .
-docker run --rm --network none nipkaart-offstreet
-# Optional live source inspection:
-docker run --rm nipkaart-offstreet main.py --fetch amsterdam
+```json
+{
+  "external_id": "06757815-834C-0E44-42B0-AE4FC4AF9CEF",
+  "observed_at": "2026-09-28T09:13:05Z",
+  "source_state": "ok",
+  "short_available": 349,
+  "long_available": null,
+  "accessible_available": null
+}
 ```
 
-The image is a source-inspection tool, not yet a scheduled producer. Do not replace existing production jobs with this revision: keep their existing image/revision until an explicit cutover is agreed. The previous SQL code and deployment definitions remain available in Git history; no legacy mode is carried in the new collector code, and no existing production process or data is modified by this preparation.
+Rules for both:
+
+- `external_id` is the original source ID and joins the two streams. A missing observation never means a facility was removed.
+- `null` means unknown and `0` means zero. Short-stay (visitors) and long-stay (season tickets) counts stay separate and are never summed.
+- Amsterdam sends capacity `0` with `0` free for malfunctions (`STORING_DEFAULT`) and for P+R sites that only report a free/full status. A capacity of `0` is therefore stored as unknown, and so are free spaces when the capacity is unknown.
+- General capacity or free spaces never imply accessible spaces. The source provides no accessible data, so those fields are `null`.
+- `name` is the package's readable name; `source_name` is the original label. Coordinates are WGS84 longitude, latitude.
+- The catalog holds no live values, so a daily review only shows real metadata changes.
+- Observations pass the source values on unchanged. `observed_at` is the source's own measurement time (`null` if absent), not the fetch time. `source_state` is the source status: the feed reports `ok` or `error`. Core decides freshness and must not show counts from a non-`ok` state as current availability.
+
+A retrieval is rejected as a whole when it is empty, has duplicate or blank IDs, invalid locations or counts, more than 10,000 records or more than 32 MiB, or does not finish within 180 seconds. Amsterdam coordinates must lie within latitude 52–53 and longitude 4–6.
+
+## Local export
+
+Write one delivery to a file without R2 or core. A failed export keeps the previous file intact.
+
+```bash
+uv run python export.py --city amsterdam --output /tmp/catalog.json
+uv run python export.py --city amsterdam --kind observations --output /tmp/observations.json
+```
+
+## R2 delivery
+
+Deliver to the existing private EU bucket `nipkaart-imports`, next to the municipal collector's `municipal/` prefix. Reuse the municipal collector's R2 token (Object Read & Write, scoped to that bucket) and enter it in `.env` (see `.env.example`). The collector itself never overwrites or deletes objects. Core reads with its existing credentials.
+
+```bash
+uv run --env-file .env python collector.py --city amsterdam --directory /tmp/offstreet
+uv run --env-file .env python collector.py --city amsterdam --kind observations
+```
+
+Every upload is one `PutObject` with `If-None-Match: *` and a SHA-256 checksum. If the object already exists, the upload only succeeds when the remote bytes are identical. The collector never deletes or overwrites objects.
+
+- **Catalog:** first saved as `<directory>/nl-amsterdam-garages/pending.json`. After a failure, that same file is retried before anything new is fetched, and it moves to `last.json` once it is delivered. Do not edit or delete the pending file to recover.
+- **Observations:** fetched and uploaded straight away, with no local state. A failure delivers nothing; the next run two minutes later is newer anyway.
+
+## Retention
+
+Set these two lifecycle rules on `nipkaart-imports` once, before the first delivery:
+
+| Rule name | Prefix | Delete after | Why |
+| --- | --- | --- | --- |
+| `expire-offstreet-catalog` | `offstreet/` | 30 days | Well beyond the 7-day core outage window, same as `municipal/` |
+| `expire-offstreet-observations` | `offstreet-observations/` | 7 days | Outdated within minutes; kept only for debugging |
+
+The trailing slash matters: `offstreet/` does not match `offstreet-observations/`. Never add a rule without a prefix, because it would also delete municipal deliveries.
+
+**Dashboard:** R2 → `nipkaart-imports` → Settings → Object lifecycle rules → Add rule. Enter the name and prefix, choose to delete objects after the number of days in the table, and save. Repeat for the second rule.
+
+**Or with Wrangler** (after `npx wrangler login`; the bucket is in the EU jurisdiction):
+
+```bash
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-catalog offstreet/ --expire-days 30 --jurisdiction eu
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-observations offstreet-observations/ --expire-days 7 --jurisdiction eu
+npx wrangler r2 bucket lifecycle list nipkaart-imports --jurisdiction eu
+```
+
+The list should show both offstreet rules plus the municipal rule (`municipal/`, 30 days) from [disabled-parking](https://github.com/NIPKaart/disabled-parking#retention).
+
+## Scheduling
+
+```bash
+docker compose up -d
+```
+
+`compose.yaml` runs two independent services on one volume. Each has its own lock and a deadline for each run:
+
+- `collector`: catalog, every `COLLECTOR_INTERVAL_SECONDS` (default 86,400); retries after at most 5 minutes.
+- `observations`: every `OBSERVATION_INTERVAL_SECONDS` (default 120).
+
+On 2026-09-28 the source's observations had a median age of ~40 seconds (range 17 seconds to 5 minutes), so the feed refreshes about once a minute. Existing jobs and legacy data are not touched.
 
 ## Contributing
 
