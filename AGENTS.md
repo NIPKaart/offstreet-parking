@@ -8,7 +8,7 @@ This repository is a source collector in the NIPKaart ecosystem. The shared, cro
 - [collector-review](https://github.com/NIPKaart/skills/blob/main/collector-review/SKILL.md): collector PR review.
 - [retro](https://github.com/NIPKaart/skills/blob/main/retro/SKILL.md): evidence-led ecosystem retrospective.
 
-Read the applicable shared workflow when a task matches its scope. These links are discovery guidance, not automatic skill installation: load the referenced SKILL.md in the agent environment when supported.
+The shared skills repository is private. Only agents with authorized access can load these workflows; links do not install skills or grant access. When access is unavailable, follow the local instructions and accessible contracts instead. Never claim to have used a skill that could not be loaded.
 
 ## Local authority
 
