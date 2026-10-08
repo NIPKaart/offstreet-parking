@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14, <4.0"
 
 [[package]]
@@ -378,21 +378,22 @@ wheels = [
 
 [[package]]
 name = "odp-amsterdam"
-version = "7.1.0"
+version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/f7/41da9d8bad03f6868b52345ca4ec8245555c6586db3f38a1732b61cbeeec/odp_amsterdam-7.1.0.tar.gz", hash = "sha256:d48026a7297071e7d5627a152ddf382c5562a5f8812b2a18f39fc1771b856230", size = 12289, upload-time = "2026-09-28T18:25:42.146Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/d1/e19a5f36896619c2f7f2c20e15812169c6a75b58de8da2a23226037862ad/odp_amsterdam-7.2.0.tar.gz", hash = "sha256:054a0cf2f1e40d25ea9aaf3445c66142485868f3736034400986e7a419295f51", size = 13291, upload-time = "2026-10-07T11:55:30.439Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/c6/fc6aadf45fc49a2baf1a7a8b3b764c2adebde2a527897ac189a8e7d0c16b/odp_amsterdam-7.1.0-py3-none-any.whl", hash = "sha256:cbc7fb4ca33c4413798ac6e873553ea4d79dbc64ed26fb3b94d9236aeed36aea", size = 14425, upload-time = "2026-09-28T18:25:40.879Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/55/95c731bce5079e145f333662bd8c879a35902111673f20d25fa33edf51a4/odp_amsterdam-7.2.0-py3-none-any.whl", hash = "sha256:24e03c2f940450b0367254b76d2b7b751361060df7cbef38d833db98add9d61a", size = 15454, upload-time = "2026-10-07T11:55:29.057Z" },
 ]
 
 [[package]]
 name = "offstreet-parking"
 version = "0.0.0"
 source = { virtual = "." }
+default-groups = ["cities", "dev"]
 dependencies = [
     { name = "boto3" },
 ]
@@ -416,7 +417,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 [package.metadata.requires-dev]
 cities = [
     { name = "hamburg", specifier = ">=3.0.0,<4.0.0" },
-    { name = "odp-amsterdam", specifier = ">=7.1.0,<7.2.0" },
+    { name = "odp-amsterdam", specifier = ">=7.2.0,<7.3.0" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },
