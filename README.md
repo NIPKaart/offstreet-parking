@@ -45,7 +45,7 @@ uv run python -m unittest discover -s tests -v
 uv run pre-commit run --all-files
 ```
 
-Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasnicolaas/python-odp-amsterdam) package (`>=7.1.0,<7.2.0`); this repository only selects car facilities and maps them. `main.py` now forwards explicit arguments to the R2 collector; without arguments it shows offline help. Use `export.py` for a local file and `collector.py --city amsterdam|hamburg --kind catalog|observations` for one source/stream. Omitting `--city` runs all registered sources and reports a nonzero exit if any fails, while still delivering healthy sources. The existing Compose schedulers run each registered city with its own retry deadline, separately for catalogs and observations.
+Source HTTP and parsing live in the [`odp-amsterdam`](https://github.com/klaasnicolaas/python-odp-amsterdam) package (`==7.1.0`); this repository only selects car facilities and maps them. `main.py` now forwards explicit arguments to the R2 collector; without arguments it shows offline help. Use `export.py` for a local file and `collector.py --city amsterdam|hamburg --kind catalog|observations` for one source/stream. Omitting `--city` runs all registered sources and reports a nonzero exit if any fails, while still delivering healthy sources. The existing Compose schedulers run each registered city with its own retry deadline, separately for catalogs and observations.
 
 ## Connected sources
 
@@ -58,7 +58,7 @@ Hamburg's [official source](https://api.hamburg.de/datasets/v1/p_und_r) and [reu
 
 Hamburg supplies nullable general capacity/free counts and local Berlin measurement times. Missing, ambiguous DST or invalid source times stay unknown; older site readings remain old, even when fetched now. Counts do not imply accessible-space availability. There is no verified source-wide revision or guarantee that every reading updates each cycle. The two-minute observation poll is an operator default, not a guarantee about each site's measurement cadence.
 
-The collector uses the released [`hamburg` 4.x package](https://github.com/klaasnicolaas/python-hamburg/releases/tag/v4.0.0), locked to version 4.0.0 in `uv.lock`. Core discovery/source approval, record review and publication are separate gates; production activation remains [core #1303](https://github.com/NIPKaart/core/issues/1303). Gent, Brussel, Liège and Münster remain follow-up work in [#679](https://github.com/NIPKaart/offstreet-parking/issues/679).
+The collector uses the released [`hamburg` 4.0.0 package](https://github.com/klaasnicolaas/python-hamburg/releases/tag/v4.0.0), pinned exactly in `pyproject.toml` and `uv.lock`, as is `odp-amsterdam==7.1.0`. Core discovery/source approval, record review and publication are separate gates; production activation remains [core #1303](https://github.com/NIPKaart/core/issues/1303). Gent, Brussel, Liège and Münster remain follow-up work in [#679](https://github.com/NIPKaart/offstreet-parking/issues/679).
 
 ## Contributing
 
