@@ -216,7 +216,7 @@ wheels = [
 [[package]]
 name = "hamburg"
 version = "0.0.0"
-source = { git = "https://github.com/klaasnicolaas/python-hamburg?rev=db72614a5f33e08da9e9ef9616f3832e2bf67327#db72614a5f33e08da9e9ef9616f3832e2bf67327" }
+source = { git = "https://github.com/klaasnicolaas/python-hamburg?rev=d72491017f3380109f0ddb613fb5fddab40ed83c#d72491017f3380109f0ddb613fb5fddab40ed83c" }
 dependencies = [
     { name = "aiohttp" },
     { name = "pytz" },
@@ -411,7 +411,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 
 [package.metadata.requires-dev]
 cities = [
-    { name = "hamburg", git = "https://github.com/klaasnicolaas/python-hamburg?rev=db72614a5f33e08da9e9ef9616f3832e2bf67327" },
+    { name = "hamburg", git = "https://github.com/klaasnicolaas/python-hamburg?rev=d72491017f3380109f0ddb613fb5fddab40ed83c" },
     { name = "odp-amsterdam", specifier = ">=7.2.0,<7.3.0" },
 ]
 dev = [
