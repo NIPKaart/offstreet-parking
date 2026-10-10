@@ -17,7 +17,7 @@ Documentation = "https://github.com/nipkaart/offstreet-parking"
 
 [dependency-groups]
 cities = [
-  "hamburg>=3.0.0,<4.0.0",
+  "hamburg",
   "odp-amsterdam>=7.2.0,<7.3.0",
 ]
 dev = [
@@ -27,6 +27,9 @@ dev = [
   "ruff==0.16.10",
   "yamllint==1.38.0",
 ]
+
+[tool.uv.sources]
+hamburg = { git = "https://github.com/klaasnicolaas/python-hamburg", rev = "ee27f12f18844633d699e75e4e3b7672c8ee71c0" }
 
 [tool.uv]
 package = false

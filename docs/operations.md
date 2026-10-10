@@ -10,8 +10,10 @@ docker compose up -d
 
 `compose.yaml` runs two independent services on one volume. Each has its own lock and a deadline for each run:
 
-- `collector`: catalog, every `COLLECTOR_INTERVAL_SECONDS` (default 86,400); retries after at most 5 minutes.
-- `observations`: every `OBSERVATION_INTERVAL_SECONDS` (default 120).
+- `collector`: Amsterdam and Hamburg catalogs, every `COLLECTOR_INTERVAL_SECONDS` (default 86,400); retries after at most 5 minutes.
+- `observations`: Amsterdam and Hamburg observations, every `OBSERVATION_INTERVAL_SECONDS` (default 120).
+
+Each scheduler starts one finite command per registered city, with a separate retry deadline per dataset and a shared-volume lock per stream. Catalog pending/last files remain under their dataset folders; Amsterdam's existing paths stay intact. A failed Hamburg command does not prevent the scheduler from trying Amsterdam and cannot replace its pending catalog.
 
 On 2026-09-28 the source's observations had a median age of ~40 seconds (range 17 seconds to 5 minutes), so the feed refreshes about once a minute. Existing jobs and legacy data are not touched.
 
@@ -59,4 +61,6 @@ Write one delivery to a file without R2 or core. A failed export keeps the previ
 ```bash
 uv run python export.py --city amsterdam --output /tmp/catalog.json
 uv run python export.py --city amsterdam --kind observations --output /tmp/observations.json
+uv run python export.py --city hamburg --output /tmp/hamburg-catalog.json
+uv run python export.py --city hamburg --kind observations --output /tmp/hamburg-observations.json
 ```

@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14, <4.0"
 
 [[package]]
@@ -215,16 +215,12 @@ wheels = [
 
 [[package]]
 name = "hamburg"
-version = "3.0.1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.0.0"
+source = { git = "https://github.com/klaasnicolaas/python-hamburg?rev=ee27f12f18844633d699e75e4e3b7672c8ee71c0#ee27f12f18844633d699e75e4e3b7672c8ee71c0" }
 dependencies = [
     { name = "aiohttp" },
     { name = "pytz" },
     { name = "yarl" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/70/8f/e6c972697d9908da97a4adabc3bc0302b578105ceda9aadd138461ce880e/hamburg-3.0.1.tar.gz", hash = "sha256:6175cf0e09d8d82db0a0dd09708434783dab535e3ff40897c60e98a879759972", size = 12657, upload-time = "2024-04-05T11:38:39.704Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/c9/5c1fc664319db4deff58f1addcf0a82976344d72b39eb43f572cd75498c3/hamburg-3.0.1-py3-none-any.whl", hash = "sha256:42fd2983291e854661baf597278684e3c787d5c3cf62c8a501d340d3e97b968c", size = 10132, upload-time = "2024-04-05T11:38:38.133Z" },
 ]
 
 [[package]]
@@ -393,7 +389,6 @@ wheels = [
 name = "offstreet-parking"
 version = "0.0.0"
 source = { virtual = "." }
-default-groups = ["cities", "dev"]
 dependencies = [
     { name = "boto3" },
 ]
@@ -416,7 +411,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 
 [package.metadata.requires-dev]
 cities = [
-    { name = "hamburg", specifier = ">=3.0.0,<4.0.0" },
+    { name = "hamburg", git = "https://github.com/klaasnicolaas/python-hamburg?rev=ee27f12f18844633d699e75e4e3b7672c8ee71c0" },
     { name = "odp-amsterdam", specifier = ">=7.2.0,<7.3.0" },
 ]
 dev = [

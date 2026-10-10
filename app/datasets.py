@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from app.cities.germany import hamburg
 from app.cities.netherlands import amsterdam
 
 if TYPE_CHECKING:
@@ -75,6 +76,33 @@ class Dataset:
 
 
 DATASETS = {
+    "hamburg": Dataset(
+        code="de-hamburg-pr",
+        selection="pr-all",
+        source=hamburg.Municipality,
+        description=SourceDescription(
+            name="Hamburg Park + Ride Anlagen",
+            publisher=(
+                "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende"
+            ),
+            source_url="https://api.hamburg.de/datasets/v1/p_und_r/collections/p_und_r/items",
+            licence="DL-DE-BY-2.0",
+            terms_url="https://suche.transparenz.hamburg.de/dataset/park-ride-anlagen-hamburg32",
+            attribution=(
+                "Freie und Hansestadt Hamburg, Behörde für Verkehr und "
+                "Mobilitätswende (BVM); Park + Ride Anlagen Hamburg; "
+                "Datenlizenz Deutschland - Namensnennung - Version 2.0; "
+                "durch NIPKaart normalisiert."
+            ),
+            country="DE",
+            subdivision="DE-HH",
+            municipality_scheme="de-ags",
+            municipality_code="02000000",
+            municipality_name="Hamburg",
+            bounds=(9.7, 53.35, 10.35, 53.8),
+            expected_interval_hours=24,
+        ),
+    ),
     "amsterdam": Dataset(
         code="nl-amsterdam-garages",
         selection="car-garages-and-pr",
