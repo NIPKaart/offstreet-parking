@@ -58,7 +58,7 @@ Hamburg's [official source](https://api.hamburg.de/datasets/v1/p_und_r) and [reu
 
 Hamburg supplies nullable general capacity/free counts and local Berlin measurement times. Missing, ambiguous DST or invalid source times stay unknown; older site readings remain old, even when fetched now. Counts do not imply accessible-space availability. There is no verified source-wide revision or guarantee that every reading updates each cycle. The two-minute observation poll is an operator default, not a guarantee about each site's measurement cadence.
 
-The Hamburg package is temporarily pinned to an immutable commit from [package PR #1241](https://github.com/klaasnicolaas/python-hamburg/pull/1241). Merge/release the package and replace the Git pin with the released version before treating this as a released deployment. Core discovery/source approval, record review and publication are separate gates; production activation remains [core #1303](https://github.com/NIPKaart/core/issues/1303). Gent, Brussel, Liège and Münster remain follow-up work in [#679](https://github.com/NIPKaart/offstreet-parking/issues/679).
+The collector uses the released [`hamburg` 4.x package](https://github.com/klaasnicolaas/python-hamburg/releases/tag/v4.0.0), locked to version 4.0.0 in `uv.lock`. Core discovery/source approval, record review and publication are separate gates; production activation remains [core #1303](https://github.com/NIPKaart/core/issues/1303). Gent, Brussel, Liège and Münster remain follow-up work in [#679](https://github.com/NIPKaart/offstreet-parking/issues/679).
 
 ## Contributing
 

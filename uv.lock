@@ -215,12 +215,16 @@ wheels = [
 
 [[package]]
 name = "hamburg"
-version = "0.0.0"
-source = { git = "https://github.com/klaasnicolaas/python-hamburg?rev=d72491017f3380109f0ddb613fb5fddab40ed83c#d72491017f3380109f0ddb613fb5fddab40ed83c" }
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "pytz" },
     { name = "yarl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/02/d3/80dd8ce38dc19e68b792f1d2900ba4930e6717a13a2026355adc5c1b93b0/hamburg-4.0.0.tar.gz", hash = "sha256:2705bb371c4ed77da614d8fa57c85a54950f4d81c0fa8cb9bb419958f8434181", size = 11120, upload-time = "2026-10-10T20:48:53.421Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fc/b5/1dc45d47fb9d22ab8340028545fbd284831d06b083e5d45890c8665f66b4/hamburg-4.0.0-py3-none-any.whl", hash = "sha256:a1bb6d89ec45827ba8e3abc6a8a4fd8e1eeb5f6ff66195b22885548419b50335", size = 12144, upload-time = "2026-10-10T20:48:52.013Z" },
 ]
 
 [[package]]
@@ -411,7 +415,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 
 [package.metadata.requires-dev]
 cities = [
-    { name = "hamburg", git = "https://github.com/klaasnicolaas/python-hamburg?rev=d72491017f3380109f0ddb613fb5fddab40ed83c" },
+    { name = "hamburg", specifier = ">=4.0.0,<5.0.0" },
     { name = "odp-amsterdam", specifier = ">=7.2.0,<7.3.0" },
 ]
 dev = [
