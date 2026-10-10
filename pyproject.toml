@@ -29,7 +29,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-hamburg = { git = "https://github.com/klaasnicolaas/python-hamburg", rev = "ee27f12f18844633d699e75e4e3b7672c8ee71c0" }
+hamburg = { git = "https://github.com/klaasnicolaas/python-hamburg", rev = "db72614a5f33e08da9e9ef9616f3832e2bf67327" }
 
 [tool.uv]
 package = false

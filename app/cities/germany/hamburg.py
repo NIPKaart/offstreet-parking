@@ -1,6 +1,7 @@
 """Deliver Hamburg's complete P+R selection through the offstreet contracts."""
 
-from hamburg import ParkAndRide, ParkAndRideCollection, UDPHamburg
+from hamburg import Collection as SourceCollection
+from hamburg import ParkAndRide, UDPHamburg
 from hamburg.exceptions import UDPHamburgError
 
 from app.records import (
@@ -35,7 +36,7 @@ class Municipality:
         )
 
 
-async def fetch_collection() -> ParkAndRideCollection:
+async def fetch_collection() -> SourceCollection[ParkAndRide]:
     """Reject failed or partial collection before the exporter sees any records."""
     try:
         async with UDPHamburg() as client:

@@ -9,7 +9,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hamburg import ParkAndRide, ParkAndRideCollection
+from hamburg import Collection as SourceCollection
+from hamburg import ParkAndRide
 from hamburg.exceptions import UDPHamburgError
 
 import collector
@@ -86,7 +87,7 @@ class HamburgTests(unittest.TestCase):
 
     def test_package_completeness_drives_export_and_observations(self) -> None:
         """Use the full collection API for both streams."""
-        result = ParkAndRideCollection([facility()], 1, 2, complete=True)
+        result = SourceCollection([facility()], 1, 2, complete=True)
         with (
             patch.object(hamburg, "UDPHamburg") as client_class,
             tempfile.TemporaryDirectory() as directory,
@@ -117,9 +118,7 @@ class HamburgTests(unittest.TestCase):
                 hamburg,
                 "fetch_collection",
                 AsyncMock(
-                    return_value=ParkAndRideCollection(
-                        [facility()], 2, 1, complete=False
-                    )
+                    return_value=SourceCollection([facility()], 2, 1, complete=False)
                 ),
             ),
             tempfile.TemporaryDirectory() as directory,
@@ -149,7 +148,7 @@ class HamburgTests(unittest.TestCase):
                 hamburg,
                 "fetch_collection",
                 AsyncMock(
-                    return_value=ParkAndRideCollection(
+                    return_value=SourceCollection(
                         [facility(longitude=4.9, latitude=52.37)], 1, 1, complete=True
                     )
                 ),
@@ -168,7 +167,7 @@ class HamburgDeliveryTests(unittest.TestCase):
 
     def test_pending_catalog_is_retried_without_fetching_new_data(self) -> None:
         """An uncertain upload preserves Hamburg's exact delivery identity."""
-        result = ParkAndRideCollection([facility()], 1, 1, complete=True)
+        result = SourceCollection([facility()], 1, 1, complete=True)
         client = MagicMock()
         client.put_object.side_effect = [OSError("interrupted"), None]
         with (
