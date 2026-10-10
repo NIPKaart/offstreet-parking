@@ -4,7 +4,7 @@ What the collector delivers to core. Core validates both formats; see the [core 
 
 ## Envelope
 
-Both envelopes contain `format`, `dataset` (`nl-amsterdam-garages`), `selection` (`car-garages-and-pr`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at`, `complete: true` and a `source` block; observations add `fetched_at`. Timestamps are UTC ISO 8601.
+Both envelopes contain `format`, `dataset` and `selection` (`nl-amsterdam-garages` / `car-garages-and-pr` or `de-hamburg-pr` / `pr-all`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at`, `complete: true` and a `source` block; observations add `fetched_at`. Timestamps are UTC ISO 8601.
 
 ## Source block
 
@@ -24,7 +24,7 @@ The catalog's `source` block describes the dataset so that core can discover it 
 }
 ```
 
-`licence` is an SPDX identifier, or `null` when the source publishes none. `area` uses ISO 3166 codes and the official municipality code (CBS for the Netherlands). Every facility must lie within `bounds`. Changing any of these values makes core ask for approval again, except `expected_interval_hours`.
+`licence` is an SPDX identifier, or `null` when the source publishes none. `area` uses ISO 3166 codes and the official municipality code (CBS for the Netherlands, AGS for Germany). Every facility must lie within `bounds`. Changing any of these values makes core ask for approval again, except `expected_interval_hours`.
 
 ## Catalog record
 

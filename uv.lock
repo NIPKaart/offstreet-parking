@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14, <4.0"
 
 [[package]]
@@ -215,16 +215,16 @@ wheels = [
 
 [[package]]
 name = "hamburg"
-version = "3.0.1"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "pytz" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/8f/e6c972697d9908da97a4adabc3bc0302b578105ceda9aadd138461ce880e/hamburg-3.0.1.tar.gz", hash = "sha256:6175cf0e09d8d82db0a0dd09708434783dab535e3ff40897c60e98a879759972", size = 12657, upload-time = "2024-04-05T11:38:39.704Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/d3/80dd8ce38dc19e68b792f1d2900ba4930e6717a13a2026355adc5c1b93b0/hamburg-4.0.0.tar.gz", hash = "sha256:2705bb371c4ed77da614d8fa57c85a54950f4d81c0fa8cb9bb419958f8434181", size = 11120, upload-time = "2026-10-10T20:48:53.421Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/c9/5c1fc664319db4deff58f1addcf0a82976344d72b39eb43f572cd75498c3/hamburg-3.0.1-py3-none-any.whl", hash = "sha256:42fd2983291e854661baf597278684e3c787d5c3cf62c8a501d340d3e97b968c", size = 10132, upload-time = "2024-04-05T11:38:38.133Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/b5/1dc45d47fb9d22ab8340028545fbd284831d06b083e5d45890c8665f66b4/hamburg-4.0.0-py3-none-any.whl", hash = "sha256:a1bb6d89ec45827ba8e3abc6a8a4fd8e1eeb5f6ff66195b22885548419b50335", size = 12144, upload-time = "2026-10-10T20:48:52.013Z" },
 ]
 
 [[package]]
@@ -393,7 +393,6 @@ wheels = [
 name = "offstreet-parking"
 version = "0.0.0"
 source = { virtual = "." }
-default-groups = ["cities", "dev"]
 dependencies = [
     { name = "boto3" },
 ]
@@ -416,8 +415,8 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 
 [package.metadata.requires-dev]
 cities = [
-    { name = "hamburg", specifier = ">=3.0.0,<4.0.0" },
-    { name = "odp-amsterdam", specifier = ">=7.2.0,<7.3.0" },
+    { name = "hamburg", specifier = "==4.0.0" },
+    { name = "odp-amsterdam", specifier = "==7.2.0" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },

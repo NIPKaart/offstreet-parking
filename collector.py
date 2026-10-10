@@ -119,13 +119,17 @@ def sync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     """Require R2 credentials and keep credential-bearing errors out of logs."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=Path("/data"))
-    parser.add_argument("--city", choices=DATASETS, default="amsterdam")
+    parser.add_argument(
+        "--city",
+        choices=DATASETS,
+        help="Deliver one source; omitted means all registered sources.",
+    )
     parser.add_argument("--kind", choices=KINDS, default="catalog")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     try:
         endpoint = os.environ["R2_ENDPOINT"]
         bucket = os.environ["R2_BUCKET"]
@@ -145,10 +149,28 @@ def main() -> None:
                 response_checksum_validation="when_required",
             ),
         )
-        if args.kind == "observations":
-            deliver_observations(client, bucket, args.city)
-        else:
-            run_once(client, bucket, args.directory, args.city)
+        failed = False
+        for city in [args.city] if args.city else DATASETS:
+            try:
+                if args.kind == "observations":
+                    deliver_observations(client, bucket, city)
+                else:
+                    run_once(client, bucket, args.directory, city)
+            except (
+                BotoCoreError,
+                ClientError,
+                SourceError,
+                OSError,
+                ValueError,
+                TypeError,
+                KeyError,
+            ) as error:
+                print(
+                    f"{city} {args.kind} failed ({type(error).__name__}); "
+                    "nothing new delivered",
+                    flush=True,
+                )
+                failed = True
     except (
         BotoCoreError,
         ClientError,
@@ -161,7 +183,8 @@ def main() -> None:
         parser.exit(
             1, f"Collector failed ({type(error).__name__}); nothing new delivered\n"
         )
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

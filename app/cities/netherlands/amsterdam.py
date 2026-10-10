@@ -26,19 +26,6 @@ class Municipality(City):
             country="Netherlands",
         )
 
-    async def async_get_locations(self) -> list[Garage]:
-        """Get garage data from API.
-
-        Returns
-        -------
-            list: List of garages.
-
-        """
-        async with ODPAmsterdam() as client:
-            garages: list[Garage] = await client.all_garages()
-            print(f"{self.name} - data has been retrieved")
-            return garages
-
     async def collect(self) -> Collection:
         """Select car facilities from the complete, non-paginated source feed."""
         garages = await fetch_car_garages()
