@@ -17,7 +17,7 @@ import collector
 from app.cities.germany import hamburg
 from app.export import export_dataset
 from app.observations import collect_observations
-from app.records import SourceError
+from app.records import Collection, SourceError
 from collector import run_once
 
 
@@ -48,7 +48,7 @@ def facility(**changes: object) -> ParkAndRide:
 class HamburgTests(unittest.TestCase):
     """Preserve P+R semantics, unknown measurements and complete collections."""
 
-    def test_catalog_keeps_source_identity_and_no_observation_claims(self) -> None:
+    def test_catalog_keeps_original_identity_and_no_observation_claims(self) -> None:
         """The P+R garage stays a P+R, not an ordinary garage."""
         self.assertEqual(
             hamburg.catalog_record(facility()),
@@ -211,3 +211,136 @@ class HamburgDeliveryTests(unittest.TestCase):
                 [call.args[2] for call in deliver.call_args_list],
                 ["hamburg", "amsterdam"],
             )
+
+
+class HamburgIdentityTests(unittest.TestCase):
+    """Deliver original identity claims and reject inconsistent snapshots."""
+
+    def test_source_refresh_preserves_original_source_ids(self) -> None:
+        """Identity reconciliation belongs to core, with original claims intact."""
+        for record in (facility(spot_id="12686527"), facility(spot_id="12686565")):
+            self.assertEqual(
+                hamburg.catalog_record(record)["external_id"], record.spot_id
+            )
+            self.assertEqual(
+                hamburg.observation_record(record)["external_id"], record.spot_id
+            )
+
+    def test_changed_claims_are_delivered_for_core_review(self) -> None:
+        """A rename or position change remains visible to the consumer."""
+        for record in (facility(name="Other"), facility(longitude=10.16269)):
+            with self.subTest(record=record):
+                claim = hamburg.catalog_record(record)
+                self.assertEqual(claim["name"], record.name)
+                self.assertEqual(claim["geometry"]["coordinates"][0], record.longitude)
+
+    def test_different_snapshot_identity_context_is_rejected(self) -> None:
+        """A second refresh cannot supply claims for the first refresh's counts."""
+        result = Collection(
+            [hamburg.observation_record(facility())],
+            1,
+            1,
+            complete=True,
+            identity_records=[hamburg.catalog_record(facility(spot_id="other"))],
+        )
+        with (
+            patch.object(
+                hamburg.Municipality, "observe", AsyncMock(return_value=result)
+            ),
+            self.assertRaisesRegex(ValueError, "different source snapshots"),
+        ):
+            asyncio.run(collect_observations("hamburg"))
+
+    def test_new_facility_is_delivered_for_core_review(self) -> None:
+        """New source records are claims, not collector publication decisions."""
+        result = SourceCollection(
+            [facility(), facility(name="New site", spot_id="new")], 2, 1, complete=True
+        )
+        with (
+            patch.object(hamburg, "fetch_collection", AsyncMock(return_value=result)),
+            tempfile.TemporaryDirectory() as directory,
+        ):
+            output = Path(directory) / "catalog.json"
+            asyncio.run(export_dataset("hamburg", output))
+            self.assertEqual(json.loads(output.read_text())["source_count"], 2)
+            observed = asyncio.run(collect_observations("hamburg"))
+            self.assertEqual(observed["format"], "nipkaart-offstreet-observations-3")
+            self.assertEqual(len(observed["identity_records"]), 2)
+
+    def test_incomplete_identity_context_is_rejected(self) -> None:
+        """The complete observation set requires a complete identity set."""
+        result = Collection(
+            [hamburg.observation_record(facility())],
+            1,
+            1,
+            complete=True,
+            identity_records=[],
+        )
+        with (
+            patch.object(
+                hamburg.Municipality, "observe", AsyncMock(return_value=result)
+            ),
+            self.assertRaises(ValueError),
+        ):
+            asyncio.run(collect_observations("hamburg"))
+
+    def test_invalid_identity_context_is_rejected(self) -> None:
+        """Claims must satisfy catalog geometry and the registered source bounds."""
+        for claim in (
+            {"external_id": "12675697"},
+            hamburg.catalog_record(facility(longitude=4.9, latitude=52.37)),
+        ):
+            result = Collection(
+                [hamburg.observation_record(facility())],
+                1,
+                1,
+                complete=True,
+                identity_records=[claim],
+            )
+            with (
+                self.subTest(claim=claim),
+                patch.object(
+                    hamburg.Municipality, "observe", AsyncMock(return_value=result)
+                ),
+                self.assertRaises(ValueError),
+            ):
+                asyncio.run(collect_observations("hamburg"))
+
+    def test_duplicate_source_ids_do_not_replace_export(self) -> None:
+        """Two upstream records must not silently collapse into one facility."""
+        result = SourceCollection([facility(), facility()], 2, 1, complete=True)
+        with (
+            patch.object(hamburg, "fetch_collection", AsyncMock(return_value=result)),
+            tempfile.TemporaryDirectory() as directory,
+        ):
+            output = Path(directory) / "catalog.json"
+            output.write_text("previous delivery")
+            with self.assertRaises(ValueError):
+                asyncio.run(export_dataset("hamburg", output))
+            self.assertEqual(output.read_text(), "previous delivery")
+            with self.assertRaises(ValueError):
+                asyncio.run(collect_observations("hamburg"))
+
+
+class HamburgLiveIdentityTests(unittest.TestCase):
+    """One fetch supplies both live values and immutable identity evidence."""
+
+    def test_rotating_ids_share_same_fetch_identity_context(self) -> None:
+        """No registry or second catalog request is necessary after refresh."""
+        before = SourceCollection([facility()], 1, 1, complete=True)
+        after = SourceCollection([facility(spot_id="200")], 1, 1, complete=True)
+        with patch.object(
+            hamburg, "fetch_collection", AsyncMock(side_effect=[before, after])
+        ) as fetch:
+            first = asyncio.run(collect_observations("hamburg"))
+            second = asyncio.run(collect_observations("hamburg"))
+        self.assertEqual(fetch.await_count, 2)
+        self.assertEqual(first["records"][0]["external_id"], "12675697")
+        self.assertEqual(second["records"][0]["external_id"], "200")
+        self.assertEqual(second["identity_records"][0]["external_id"], "200")
+        self.assertEqual(
+            first["identity_records"][0]["geometry"],
+            second["identity_records"][0]["geometry"],
+        )
+        self.assertNotIn("capacity", second["identity_records"][0])
+        self.assertEqual(second["records"][0]["observed_at"], "2026-10-10T20:00:00Z")

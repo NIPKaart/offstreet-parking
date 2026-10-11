@@ -24,6 +24,8 @@ Each scheduler starts one finite command per registered city, with a separate re
 
 On 2026-09-28 Amsterdam's observations had a median age of ~40 seconds (range 17 seconds to 5 minutes), so the feed refreshes about once a minute. Existing jobs and legacy data are not touched.
 
+Hamburg now delivers original source IDs plus same-fetch identity claims in version-3 observations; no reviewed collector-side registry is needed. Deploy the compatible core consumer before this producer. Core may apply unambiguous observations to published facilities without staging a catalog import per refresh; new/ambiguous facilities still require catalog review. Daily catalogs and two-minute observations keep their separate schedules. Immutable pending catalogs still retry their original bytes before new source retrieval.
+
 ## R2 delivery
 
 Deliver to the existing private EU bucket `nipkaart-imports`, next to the municipal collector's `municipal/` prefix. Reuse the municipal collector's R2 token (Object Read & Write, scoped to that bucket) and enter it in `.env` (see `.env.example`). The collector itself never overwrites or deletes objects. Core reads with its existing credentials.

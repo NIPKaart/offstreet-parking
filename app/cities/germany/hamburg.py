@@ -1,5 +1,7 @@
 """Deliver Hamburg's complete P+R selection through the offstreet contracts."""
 
+from __future__ import annotations
+
 from hamburg import Collection as SourceCollection
 from hamburg import ParkAndRide, UDPHamburg
 from hamburg.exceptions import UDPHamburgError
@@ -32,7 +34,11 @@ class Municipality:
         records = [observation_record(record) for record in result.records]
         records.sort(key=lambda record: record["external_id"])
         return Collection(
-            records, result.total_count, result.pages_fetched, result.complete
+            records,
+            result.total_count,
+            result.pages_fetched,
+            result.complete,
+            identity_records=[catalog_record(record) for record in result.records],
         )
 
 
@@ -49,7 +55,7 @@ async def fetch_collection() -> SourceCollection[ParkAndRide]:
 def catalog_record(record: ParkAndRide) -> dict[str, object]:
     """All records in the P+R source are P+R facilities, even its parking garages."""
     data = {
-        "external_id": record.spot_id,
+        "external_id": str(record.spot_id),
         "name": record.name,
         "source_name": record.name,
         "facility_type": "park_and_ride",
@@ -67,7 +73,7 @@ def observation_record(record: ParkAndRide) -> dict[str, object]:
     total = capacity(record.capacity)
     free = capacity(record.free_space)
     data = {
-        "external_id": record.spot_id,
+        "external_id": str(record.spot_id),
         "observed_at": timestamp(record.updated_at),
         "source_state": "ok",
         "status": "counting" if total is not None and free is not None else None,
