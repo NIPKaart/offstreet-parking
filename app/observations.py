@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from app.datasets import DATASETS
-from app.export import FETCH_TIMEOUT, MAX_RECORDS, write_payload
+from app.export import FETCH_TIMEOUT, MAX_RECORDS, validate_payload, write_payload
 from app.records import timestamp
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ async def collect_observations(city: str) -> dict:
     ):
         message = "Observation selection is empty, incomplete or contains duplicate IDs"
         raise ValueError(message)
-    return {
+    payload = {
         "format": FORMAT,
         "dataset": dataset.code,
         "selection": dataset.selection,
@@ -42,6 +42,31 @@ async def collect_observations(city: str) -> dict:
         "source_count": result.total_count,
         "records": result.records,
     }
+    if result.identity_records is not None:
+        validate_payload(
+            {
+                "format": "nipkaart-offstreet-catalog-3",
+                "dataset": dataset.code,
+                "selection": dataset.selection,
+                "source": dataset.description.as_dict(),
+                "delivery_id": payload["delivery_id"],
+                "retrieved_at": payload["fetched_at"],
+                "complete": True,
+                "source_count": result.total_count,
+                "records": result.identity_records,
+            },
+            dataset,
+        )
+        if {record["external_id"] for record in result.identity_records} != {
+            record["external_id"] for record in result.records
+        }:
+            message = (
+                "Identity claims and observations belong to different source snapshots"
+            )
+            raise ValueError(message)
+        payload["format"] = "nipkaart-offstreet-observations-3"
+        payload["identity_records"] = result.identity_records
+    return payload
 
 
 async def export_observations(city: str, output: Path) -> int:

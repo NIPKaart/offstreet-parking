@@ -34,6 +34,7 @@ class Collection:
     total_count: int
     pages_fetched: int
     complete: bool
+    identity_records: list[dict[str, Any]] | None = None
 
 
 def timestamp(value: datetime | None) -> str | None:
