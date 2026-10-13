@@ -392,10 +392,9 @@ wheels = [
 [[package]]
 name = "odp-gent"
 version = "0.0.0"
-source = { git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=248c7d8579f3ff689275fbc7314b91f73e705ce8#248c7d8579f3ff689275fbc7314b91f73e705ce8" }
+source = { git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=a555c411f6f8dddacaeef381dbe331792be1ea65#a555c411f6f8dddacaeef381dbe331792be1ea65" }
 dependencies = [
     { name = "aiohttp" },
-    { name = "pytz" },
     { name = "yarl" },
 ]
 
@@ -428,7 +427,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 cities = [
     { name = "hamburg", specifier = "==4.0.0" },
     { name = "odp-amsterdam", specifier = "==7.2.0" },
-    { name = "odp-gent", git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=248c7d8579f3ff689275fbc7314b91f73e705ce8" },
+    { name = "odp-gent", git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=a555c411f6f8dddacaeef381dbe331792be1ea65" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },
