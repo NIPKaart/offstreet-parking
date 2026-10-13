@@ -4,7 +4,7 @@ What the collector delivers to core. Core validates both formats; see the [core 
 
 ## Envelope
 
-Both envelopes contain `format`, `dataset` and `selection` (`nl-amsterdam-garages` / `car-garages-and-pr` or `de-hamburg-pr` / `pr-all`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at`, `complete: true` and a `source` block; observations add `fetched_at`. Timestamps are UTC ISO 8601.
+Both envelopes contain `format`, `dataset` and `selection` (`nl-amsterdam-garages` / `car-garages-and-pr` or `de-hamburg-pr` / `pr-all` or `be-gent-parking` / `live-facilities-all`), a new `delivery_id` UUID per retrieval, `source_count` and `records` sorted by `external_id`. The catalog adds `retrieved_at`, `complete: true` and a `source` block; observations add `fetched_at`. Timestamps are UTC ISO 8601.
 
 ## Source block
 
@@ -78,3 +78,6 @@ A retrieval is rejected as a whole when it is empty, has duplicate or blank IDs,
 Hamburg emits `nipkaart-offstreet-observations-3`, adding `identity_records` to the existing observation envelope. Each identity claim has exactly the catalog record fields (`external_id`, `name`, `source_name`, `facility_type`, `geometry`). The two lists contain the same unique source IDs and come from one complete upstream collection. Only the observations contain times/counts; identity claims contain no occupancy. Other sources can enable this by populating `Collection.identity_records`; Amsterdam continues to emit version 2.
 
 Core validates these claims under the approved source selection/bounds and resolves only unambiguous links to published facilities. It retains the applied claim with the latest observation, without publishing catalog metadata or creating a review entry per polling cycle. New/ambiguous facilities receive no occupancy until catalog identity is settled. The version-3 consumer also supports an exact `catalog_delivery_id` as an alternative to `identity_records`; this producer uses same-fetch claims because Hamburg IDs change independently of the daily catalog schedule. The authoritative matching/publication policy lives in core, not in this document.
+
+
+`facility_type` accepts `garage`, `park_and_ride` and `parking_lot`. The last value preserves public surface parking lots instead of labeling them as garages. Deploy the compatible core validator and storage migration before delivering Gent catalogs with this additive type.

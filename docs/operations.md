@@ -2,7 +2,7 @@
 
 How the collector runs and delivers. The formats are in [formats.md](formats.md).
 
-`main.py` forwards explicit arguments to the R2 collector; without arguments it shows offline help. Use `collector.py --city amsterdam|hamburg --kind catalog|observations` for one source and stream. Omitting `--city` runs all registered sources, continues after individual failures and returns a nonzero exit if any source failed.
+`main.py` forwards explicit arguments to the R2 collector; without arguments it shows offline help. Use `collector.py --city amsterdam|hamburg|gent --kind catalog|observations` for one source and stream. Omitting `--city` runs all registered sources, continues after individual failures and returns a nonzero exit if any source failed.
 
 | Stream | Default cadence | R2 key |
 | --- | --- | --- |
@@ -17,8 +17,8 @@ docker compose up -d
 
 `compose.yaml` runs two independent services on one volume. Each has its own lock and a deadline for each run:
 
-- `collector`: Amsterdam and Hamburg catalogs, every `COLLECTOR_INTERVAL_SECONDS` (default 86,400); retries after at most 5 minutes.
-- `observations`: Amsterdam and Hamburg observations, every `OBSERVATION_INTERVAL_SECONDS` (default 120).
+- `collector`: Amsterdam, Hamburg and Gent catalogs, every `COLLECTOR_INTERVAL_SECONDS` (default 86,400); retries after at most 5 minutes.
+- `observations`: Amsterdam, Hamburg and Gent observations, every `OBSERVATION_INTERVAL_SECONDS` (default 120).
 
 Each scheduler starts one finite command per registered city, with a separate retry deadline per dataset and a shared-volume lock per stream. Catalog pending/last files remain under their dataset folders; Amsterdam's existing paths stay intact. A failed Hamburg command does not prevent the scheduler from trying Amsterdam and cannot replace its pending catalog.
 
@@ -73,6 +73,8 @@ uv run python export.py --city amsterdam --kind observations --output /tmp/obser
 uv run python export.py --city hamburg --output /tmp/hamburg-catalog.json
 uv run python export.py --city hamburg --kind observations --output /tmp/hamburg-observations.json
 ```
+
+Gent reuses daily catalogs and two-minute observations. Deploy the core consumer/migration supporting `parking_lot` before enabling Gent; do not upload its new catalogs to an older consumer. The pinned Git dependency is release scaffolding for [python-odp-gent #1171](https://github.com/klaasnicolaas/python-odp-gent/pull/1171); replace it with the exact validated PyPI release before activation.
 
 ## Production activation
 

@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14, <4.0"
 
 [[package]]
@@ -390,10 +390,19 @@ wheels = [
 ]
 
 [[package]]
+name = "odp-gent"
+version = "0.0.0"
+source = { git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=248c7d8579f3ff689275fbc7314b91f73e705ce8#248c7d8579f3ff689275fbc7314b91f73e705ce8" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "pytz" },
+    { name = "yarl" },
+]
+
+[[package]]
 name = "offstreet-parking"
 version = "0.0.0"
 source = { virtual = "." }
-default-groups = ["cities", "dev"]
 dependencies = [
     { name = "boto3" },
 ]
@@ -402,6 +411,7 @@ dependencies = [
 cities = [
     { name = "hamburg" },
     { name = "odp-amsterdam" },
+    { name = "odp-gent" },
 ]
 dev = [
     { name = "pre-commit" },
@@ -418,6 +428,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 cities = [
     { name = "hamburg", specifier = "==4.0.0" },
     { name = "odp-amsterdam", specifier = "==7.2.0" },
+    { name = "odp-gent", git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=248c7d8579f3ff689275fbc7314b91f73e705ce8" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },

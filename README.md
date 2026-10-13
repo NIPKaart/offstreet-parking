@@ -21,7 +21,7 @@
 
 ## About
 
-Collect Amsterdam car garages/P+R and Hamburg P+R for [NIPKaart][nipkaart] as two separate streams, delivered as JSON files to a private Cloudflare R2 bucket. Core picks them up from there. This collector has no core API or database credentials.
+Collect Amsterdam car garages/P+R, Hamburg P+R and Gent garages/parking lots/P+R for [NIPKaart][nipkaart] as two separate streams, delivered as JSON files to a private Cloudflare R2 bucket. Core picks them up from there. This collector has no core API or database credentials.
 
 Catalogs describe facilities; observations carry source times, status and general availability. They run daily and every two minutes respectively.
 
@@ -49,6 +49,7 @@ Source HTTP and parsing live in the universal packages; this collector selects a
 | --- | --- |
 | Amsterdam | Car garages and P+R |
 | Hamburg | P+R |
+| Gent | All facilities in the unified live feed |
 
 See [sources](docs/sources.md) for coverage and limitations, and [operations](docs/operations.md) for local exports and R2 commands.
 

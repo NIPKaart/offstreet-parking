@@ -72,7 +72,7 @@ def validate_record(record: dict[str, Any]) -> None:
         raise ValueError(message)
     for field in ("external_id", "name", "source_name"):
         validate_text(record[field])
-    if record["facility_type"] not in ("garage", "park_and_ride"):
+    if record["facility_type"] not in ("garage", "park_and_ride", "parking_lot"):
         message = "Unsupported facility type"
         raise ValueError(message)
     validate_geometry(record["geometry"])

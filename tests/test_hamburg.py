@@ -203,13 +203,13 @@ class HamburgDeliveryTests(unittest.TestCase):
             patch.object(
                 collector,
                 "deliver_observations",
-                side_effect=[SourceError("offline"), "key"],
+                side_effect=["gent-key", SourceError("offline"), "key"],
             ) as deliver,
         ):
             self.assertEqual(collector.main(["--kind", "observations"]), 1)
             self.assertEqual(
                 [call.args[2] for call in deliver.call_args_list],
-                ["hamburg", "amsterdam"],
+                ["gent", "hamburg", "amsterdam"],
             )
 
 
