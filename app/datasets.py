@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
+from app.cities.belgium import gent
 from app.cities.germany import hamburg
 from app.cities.netherlands import amsterdam
 
@@ -76,6 +77,30 @@ class Dataset:
 
 
 DATASETS = {
+    "gent": Dataset(
+        code="be-gent-parking",
+        selection="live-facilities-all",
+        source=gent.Municipality,
+        description=SourceDescription(
+            name="Gent realtime parkeervoorzieningen",
+            publisher="Mobiliteitsbedrijf Gent",
+            source_url="https://data.stad.gent/api/records/1.0/search/?dataset=bezetting-parkeergarages-real-time",
+            licence=None,  # Named reuse licence is retained in terms/attribution.
+            terms_url="https://www.vlaanderen.be/digitaal-vlaanderen/onze-diensten-en-platformen/open-data/voorwaarden-voor-het-hergebruik-van-overheidsinformatie/modellicentie-gratis-hergebruik",
+            attribution=(
+                "Mobiliteitsbedrijf Gent; Real time bezetting parkeergarages Gent; "
+                "Modellicentie Gratis Hergebruik; door NIPKaart geselecteerd "
+                "en genormaliseerd."
+            ),
+            country="BE",
+            subdivision="BE-VOV",
+            municipality_scheme="be-ins",
+            municipality_code="44021",
+            municipality_name="Gent",
+            bounds=(3.65, 50.98, 3.80, 51.12),
+            expected_interval_hours=24,
+        ),
+    ),
     "hamburg": Dataset(
         code="de-hamburg-pr",
         selection="pr-all",
