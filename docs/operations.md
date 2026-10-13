@@ -74,7 +74,7 @@ uv run python export.py --city hamburg --output /tmp/hamburg-catalog.json
 uv run python export.py --city hamburg --kind observations --output /tmp/hamburg-observations.json
 ```
 
-Gent reuses daily catalogs and two-minute observations. Deploy the core consumer/migration supporting `parking_lot` before enabling Gent; do not upload its new catalogs to an older consumer. The pinned Git dependency is release scaffolding for [python-odp-gent #1171](https://github.com/klaasnicolaas/python-odp-gent/pull/1171); replace it with the exact validated PyPI release before activation.
+Gent reuses daily catalogs and two-minute observations. Deploy the core consumer/migration supporting `parking_lot` before enabling Gent; do not upload its new catalogs to an older consumer. The collector uses the exact published `odp-gent==1.0.0` version in `pyproject.toml` and `uv.lock`.
 
 ## Production activation
 

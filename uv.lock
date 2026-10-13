@@ -391,11 +391,15 @@ wheels = [
 
 [[package]]
 name = "odp-gent"
-version = "0.0.0"
-source = { git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=a555c411f6f8dddacaeef381dbe331792be1ea65#a555c411f6f8dddacaeef381dbe331792be1ea65" }
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "yarl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/68/05f986ea4c96c15aa7da46cf22e3903f5c4335572759c548554d570f351f/odp_gent-1.0.0.tar.gz", hash = "sha256:fa27e9663eb450bea1cf49607415bfc08130be813043d2e657e0f21a8d7a4a50", size = 10837, upload-time = "2026-10-13T20:10:59.446Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/6d/41bff75eb9ef327fbe6b0b633033695a9a900b4164c3c80c5ab0531f440d/odp_gent-1.0.0-py3-none-any.whl", hash = "sha256:a7e713371fedb4b0e7d4a80cc1a18aed8193d078fb687f4d1f22e5d3d3b2976f", size = 11908, upload-time = "2026-10-13T20:10:58.265Z" },
 ]
 
 [[package]]
@@ -427,7 +431,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 cities = [
     { name = "hamburg", specifier = "==4.0.0" },
     { name = "odp-amsterdam", specifier = "==7.2.0" },
-    { name = "odp-gent", git = "https://github.com/klaasnicolaas/python-odp-gent.git?rev=a555c411f6f8dddacaeef381dbe331792be1ea65" },
+    { name = "odp-gent", specifier = "==1.0.0" },
 ]
 dev = [
     { name = "pre-commit", specifier = "==3.8.0" },

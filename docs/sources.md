@@ -1,6 +1,6 @@
 # Sources
 
-Source HTTP and parsing belong to the universal packages; the collector maps their records to the [delivery formats](formats.md). Source packages are pinned exactly in `pyproject.toml` and `uv.lock`: `odp-amsterdam==7.2.0` and `hamburg==4.0.0`. Update those pins deliberately and validate both streams before delivery.
+Source HTTP and parsing belong to the universal packages; the collector maps their records to the [delivery formats](formats.md). Source packages are pinned exactly in `pyproject.toml` and `uv.lock`: `odp-amsterdam==7.2.0`, `hamburg==4.0.0` and `odp-gent==1.0.0`. Update those pins deliberately and validate both streams before delivery.
 
 | City | Dataset / selection | Package retrieval |
 | --- | --- | --- |
@@ -59,4 +59,4 @@ Other source `carPark` rows map to `garage`; other `offStreetParkingGround` rows
 
 `totalcapacity` is theoretical general capacity and explicitly includes reserved/accessibility spaces; `availablecapacity` is the reported general free count. Neither proves accessible availability. `temporaryclosed=true` or `isopennow=false` maps to `closed` without rewriting counts. Otherwise known counts map to `counting`, or an explicit open flag to `open`. Unknown counts remain null; zero remains zero. `source_state=ok` means a successfully retrieved and decoded source record, not verified sensor health; the source has no separate sensor-health guarantee. Failed retrieval delivers nothing. Missing/invalid/undated source times stay unknown, and core does not replace newer dated measurements with them.
 
-The collector temporarily pins the immutable package commit from [python-odp-gent #1171](https://github.com/klaasnicolaas/python-odp-gent/pull/1171) in both dependency files, pending an exact PyPI release. Deploy the compatible core `parking_lot` consumer/migration first. Real local exports and the isolated core acceptance test are evidence of contract behavior; live R2 uptake, administrator approval/publication in the target environment and production activation under core#1303 remain separate gates.
+The collector pins the published [odp-gent v1.0.0](https://github.com/klaasnicolaas/python-odp-gent/releases/tag/v1.0.0) in both dependency files; no Git dependency is required. Deploy the compatible core `parking_lot` consumer/migration first. Real local exports and the isolated core acceptance test are evidence of contract behavior; live R2 uptake, administrator approval/publication in the target environment and production activation under core#1303 remain separate gates.
