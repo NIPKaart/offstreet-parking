@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14, <4.0"
 
 [[package]]
@@ -378,15 +378,15 @@ wheels = [
 
 [[package]]
 name = "odp-amsterdam"
-version = "7.2.0"
+version = "7.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/d1/e19a5f36896619c2f7f2c20e15812169c6a75b58de8da2a23226037862ad/odp_amsterdam-7.2.0.tar.gz", hash = "sha256:054a0cf2f1e40d25ea9aaf3445c66142485868f3736034400986e7a419295f51", size = 13291, upload-time = "2026-10-07T11:55:30.439Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/30/17fc3404dfc997e5a0ae89e3725238770a995d6e89db7e2bbc79378827c1/odp_amsterdam-7.2.1.tar.gz", hash = "sha256:b08f606a3d0d51e01039e88fb9b1b598008267eefa0b2379c2de4d760807f2d3", size = 13191, upload-time = "2026-10-14T11:26:48.833Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/55/95c731bce5079e145f333662bd8c879a35902111673f20d25fa33edf51a4/odp_amsterdam-7.2.0-py3-none-any.whl", hash = "sha256:24e03c2f940450b0367254b76d2b7b751361060df7cbef38d833db98add9d61a", size = 15454, upload-time = "2026-10-07T11:55:29.057Z" },
+    { url = "https://files.pythonhosted.org/packages/61/82/27c4829a8cf62b25fac4cff4518951992467cfcdad0e21659a96c8e60446/odp_amsterdam-7.2.1-py3-none-any.whl", hash = "sha256:0ae57a286d261a34a74a527cc0f81c1fdfb74b0b0a971c86e71afbe66f4d270e", size = 14830, upload-time = "2026-10-14T11:26:47.563Z" },
 ]
 
 [[package]]
@@ -406,6 +406,7 @@ wheels = [
 name = "offstreet-parking"
 version = "0.0.0"
 source = { virtual = "." }
+default-groups = ["cities", "dev"]
 dependencies = [
     { name = "boto3" },
 ]
@@ -430,7 +431,7 @@ requires-dist = [{ name = "boto3", specifier = ">=1.40,<2" }]
 [package.metadata.requires-dev]
 cities = [
     { name = "hamburg", specifier = "==4.0.0" },
-    { name = "odp-amsterdam", specifier = "==7.2.0" },
+    { name = "odp-amsterdam", specifier = "==7.2.1" },
     { name = "odp-gent", specifier = "==1.0.0" },
 ]
 dev = [
