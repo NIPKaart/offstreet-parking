@@ -19,7 +19,7 @@ Documentation = "https://github.com/nipkaart/offstreet-parking"
 cities = [
   "hamburg==4.0.0",
   "odp-gent==1.0.0",
-  "odp-amsterdam==7.2.0",
+  "odp-amsterdam==7.2.1",
 ]
 dev = [
   "pre-commit==3.8.0",
