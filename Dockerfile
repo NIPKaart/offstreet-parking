@@ -1,5 +1,5 @@
 FROM python:3.14-slim-bookworm
-COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /bin/
 LABEL Maintainer="Klaas Schoute"
 
 WORKDIR /app
