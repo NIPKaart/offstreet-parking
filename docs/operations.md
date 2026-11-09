@@ -46,22 +46,22 @@ Set these two lifecycle rules on `nipkaart-imports` once, before the first deliv
 
 | Rule name | Prefix | Delete after | Why |
 | --- | --- | --- | --- |
-| `expire-offstreet-catalog` | `offstreet/` | 30 days | Well beyond the 7-day core outage window, same as `municipal/` |
-| `expire-offstreet-observations` | `offstreet-observations/` | 7 days | Outdated within minutes; kept only for debugging |
+| `expire-offstreet-catalog` | `offstreet/` | 14 days | Gives recovery time beyond the 7-day Core outage window |
+| `expire-offstreet-observations` | `offstreet-observations/` | 48 hours | Recent troubleshooting history; Core processes only the latest observation |
 
 The trailing slash matters: `offstreet/` does not match `offstreet-observations/`. Never add a rule without a prefix, because it would also delete municipal deliveries.
 
-**Dashboard:** R2 → `nipkaart-imports` → Settings → Object lifecycle rules → Add rule. Enter the name and prefix, choose to delete objects after the number of days in the table, and save. Repeat for the second rule.
+**Dashboard:** R2 → `nipkaart-imports` → Settings → Object lifecycle rules. Add or edit the rule for each prefix. Enter the name and prefix, choose to delete objects after the number of days in the table, and save. Repeat for the second rule.
 
-**Or with Wrangler** (after `npx wrangler login`; the bucket is in the EU jurisdiction):
+**To create missing rules with Wrangler** (after `npx wrangler login`; the bucket is in the EU jurisdiction):
 
 ```bash
-npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-catalog offstreet/ --expire-days 30 --jurisdiction eu
-npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-observations offstreet-observations/ --expire-days 7 --jurisdiction eu
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-catalog offstreet/ --expire-days 14 --jurisdiction eu
+npx wrangler r2 bucket lifecycle add nipkaart-imports expire-offstreet-observations offstreet-observations/ --expire-days 2 --jurisdiction eu
 npx wrangler r2 bucket lifecycle list nipkaart-imports --jurisdiction eu
 ```
 
-The list should show both offstreet rules plus the municipal rule (`municipal/`, 30 days) from [disabled-parking](https://github.com/NIPKaart/disabled-parking#retention).
+The list should show both offstreet rules plus the [disabled-parking rules](https://github.com/NIPKaart/disabled-parking/blob/main/docs/collector.md#retention) for `municipal/` (30 days) and `proposals/` (14 days).
 
 ## Local export
 
