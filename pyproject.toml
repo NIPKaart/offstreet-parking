@@ -25,7 +25,7 @@ dev = [
   "pre-commit==3.8.0",
   "pre-commit-hooks==4.6.0",
   "pylint==4.1.4",
-  "ruff==0.17.5",
+  "ruff==0.17.6",
   "yamllint==1.38.0",
 ]
 
